@@ -12,8 +12,8 @@
 Jazillionth is a light-weight, non-intrusive, easy-to-use testing harness for automatically testing your JavaScript;
 
 * **Light-weight**: Jazillionth comes bundled in a single JavaScript file.  It only depends on jQuery being accessible but has no other dependencies.
-* **Non-intrusive**: you do not need to add anything to the page and script you want to test.  Jazillionth wraps your page and script, and all of your testing code lives in a wrapper around your page.
-* **Easy-to-use**: you only need to create a simple testing HTML page which links to jQuery and Jazillionth, set up a Jazillionth object on it, and register your tests with this object.  Next, just open the test page in your browser, and all tests should run automatically.  Done!
+* **Non-intrusive**: you do not need to add anything to the page and script you want to test.  Jazillionth wraps your page and script, and all of your testing code lives in a test suite wrapper around your page.
+* **Easy-to-use**: you only need to create a simple test suite page which links to jQuery and Jazillionth, set up a Jazillionth object on it, and register your page and tests with this object.  Next, just open the test suite page in your browser, and all tests should run automatically.  Done!
 
 As expected, Jazillionth doesn't promise the world and beyond, but that makes it very light weight in use and probably Good Enough for most scenarios.
 
@@ -23,43 +23,43 @@ All use cases are explained in the chapters below, and examples are shown in the
 
 ## Obligatory disclaimer
 
-Compared to other simple testing suites, the only 'complicated' thing Jazillionth does is load the page-under-test in an iframe instead of nestling right into the page itself.  This way the page-under-test can remain totally oblivious to the testing framework you wrap around it.  This does however have drawbacks.
+Compared to other simple testing harnesses, the only 'complicated' thing Jazillionth does is load the page to test in an iframe instead of nestling right into the page itself.  This way the page under test can remain totally oblivious to the test suite you wrap around it.  This does however have drawbacks.
 
-Due to browser security measures (Same Origin policy), both the test page and the page-under-test must be served from the same domain.  One can get around this by using `postMessage`, but that is out of scope for Jazillionth.
+Due to browser security measures (Same Origin policy), both the test suite page and the page under test must be served from the same domain.  One can get around this by using `postMessage`, but that is out of scope for Jazillionth.
 
 Local files (opening files with the `file://` protocol) are not testable either.  However, see the chapter <a href="#setupSimpleServer">Testing without a dedicated web server</a> for instructions on how to overcome this one.
 
-And last (but certainly not least), both the testing page as well as the page-under-test running in the iframe have their own scripts.  But the test page's script should not run before the page-under-test's script has run.  Jazillionth seems to get this right, but I have so far not been able to get absolute guarantees that the way Jazillionth manages this is a sure-fire way to ascertain this behavior.  If Jazillionth's tests run before your page-under-test's scripts have run, please let me know!
+And last (but certainly not least), both the test suite page as well as the page under test running in the iframe have their own scripts.  But the test suite page's script should not run before the page under test's script has run.  Jazillionth seems to get this right, but I have so far not been able to get absolute guarantees that the way Jazillionth manages this is a sure-fire way to ascertain this behavior.  If Jazillionth's tests run before your page under test's scripts have run, please let me know!
 
 
 
 ## Terms and names used in this document
 
-This document refers to two pages: the test page and the page-under-test.  The former is the page you use to test, while the latter is the page being tested.
+This document refers to two pages: the test suite page and the page under test.  The former is the page you use to drive all tests, while the latter is the page being tested.
 
 In this document all Jazillionth object instances are named `jazil` for consistency, but you're free to name it whatever you want.  This name reappears as the name of the sole Jazillionth object as well as the name of the argument passed into all callback functions.
 
 
 
-## Creating the test page
+## Creating the test suite page
 
-Jazillionth doesn't require much from the HTML page driving the tests.  The bare minimum needed on that page is as follows, in the given order:
+Jazillionth doesn't require much from the test suite page.  The bare minimum needed on that page is as follows, in the given order:
 
 1. link to a recent-ish version of jQuery,
 2. link to Jazillionth,
 3. create (and optionally configure) a Jazillionth object, and
 4. link to or inline your own testing code.
 
-By default, Jazillionth doesn't need anything else regarding the page's content.  It will:
+By default, Jazillionth doesn't need anything else regarding the test suite page's content.  It will:
 
-* wait for the test page to be ready,
-* attach an iframe to the test page,
-* load the page-under-test in that iframe,
-* automatically run all your tests when the page-under-test is fully loaded,
-* show the test results at the top of the test page, and
-* depending on the overall test outcome, set the entire page body background color to either the 'pass' or 'fail' color.
+* wait for the test suite page to be ready,
+* attach an iframe to the test suite page,
+* load the page under test in that iframe,
+* automatically run all your tests when the page under test is fully loaded,
+* show the test results at the top of the test suite page, and
+* depending on the overall test outcome, set the entire test suite page body background color to either the 'pass' or 'fail' color.
 
-If you want to add extra content to the test page you are free to do so.  You can add an iframe to load the page-under-test into and tell Jazillionth to use that.  You can also tell Jazillionth where to place the test result, directing it to an existing HTML element instead.  And the used colors are tweakable too.  See the chapter <a href="#tweaking">Tweaking and advanced functionality</a> for more details.
+If you want to add extra content to the test suite page you are free to do so.  You can add an iframe to load the page under test into and tell Jazillionth to use that.  You can also tell Jazillionth where to place the test result, directing it to an existing HTML element instead.  And the used colors are tweakable too.  See the chapter <a href="#tweaking">Tweaking and advanced functionality</a> for more details.
 
 
 
@@ -67,11 +67,11 @@ If you want to add extra content to the test page you are free to do so.  You ca
 
 Before you can register your tests, you have to start up Jazillionth.  You do this by creating a single Jazillionth variable.  You can make this a global variable so that the rest of your script can access it automatically, though all callbacks back from Jazillionth to your code will pass the actual Jazillionth object in as an argument too.
 
-When creating the Jazillionth object, you must give it the URI of the page-under-test as a first argument.  You can also pass in a second 'options' argument to further tweak Jazillionth.  See the chapter <a href="#tweaking">Tweaking and advanced functionality</a> for more details on this.
+When creating the Jazillionth object, you must give it the URL of the page under test as a first argument.  You can also pass in a second 'options' argument to further tweak Jazillionth.  See the chapter <a href="#tweaking">Tweaking and advanced functionality</a> for more details on this.
 
 So basically, you must only add:
 
-`let jazil = new Jazillionth('/path/to/page-under-test.html')`
+`let jazil = new Jazillionth('/path/to/page under test.html')`
 
 and Jazillionth is up-and-running.
 
@@ -110,21 +110,21 @@ Note also that there is no opposite to `jazil.Fail`; if a test goes well, you do
 
 
 
-## Accessing the page-under-test
+## Accessing the page under test
 
-Since the page-under-test is loaded in a separate iframe, your testing scripts cannot easily access it's HTML content nor it's JavaScript functions and global variables, etc.  But Jazillionth will help out with this.
+Since the page under test is loaded in a separate iframe, your testing scripts cannot easily access it's HTML content nor it's JavaScript functions and global variables, etc.  But Jazillionth will help out with this.
 
-When creating the Jazillionth object you can tell it to automatically make certain JavaScript objects available for direct use in your scripts.  Do this by specifying the option `accessObjectNames`, which should hold the names of all the JavaScript objects in the page-under-test you want to access.  Once the page-under-test has loaded, Jazillionth will try to access each one of these objects and make an alias to them under the test page's window.  After that they are accessible just as if they were declared in your own script.
+When creating the Jazillionth object you can tell it to automatically make certain JavaScript objects available for direct use in your scripts.  Do this by specifying the option `accessObjectNames`, which should hold the names of all the JavaScript objects in the page under test you want to access.  Once the page under test has loaded, Jazillionth will try to access each one of these objects and make an alias to them under the test suite page's window.  After that they are accessible just as if they were declared in your own script.
 
-A caveat here is that Jazillionth can only access JavaScript objects that are registered on the page-under-test's window object.  Your functions are automatically added there, as well as global variables declared with `var`.  But global variables declared with `let` are not accessible.  If you want to access `let` declared variables in your testing scripts, either change them to `var` variables, or add an accessor function for them.
+A caveat here is that Jazillionth can only access JavaScript objects that are registered on the page under test's window object.  Your functions are automatically added there, as well as global variables declared with `var`.  But global variables declared with `let` are not accessible.  If you want to access `let` declared variables in your testing scripts, either change them to `var` variables, or add an accessor function for them.
 
-Jazillionth also makes two other objects accessible: the page-under-test's `window` and `document` objects.  You can find these under `jazil.testDocument` and `jazil.testWindow` respectively.  You can use these to access, for example, the page-under-test's body content, the rest of the page-under-test's global JavaScript variables and functions, as well as the page's `location`, `history` and `localstorage` objects.
+Jazillionth also makes two other objects accessible: the page under test's `window` and `document` objects.  You can find these under `jazil.testDocument` and `jazil.testWindow` respectively.  You can use these to access, for example, the page under test's body content, the rest of the page under test's global JavaScript variables and functions, as well as the page's `location`, `history` and `localstorage` objects.
 
 
 
 ## Running the tests
 
-After you created the test page, just open it in your browser.  Once the test page and the page-under-test are fully loaded, all tests in all registered test sets will be executed automatically.  Jazillionth will then show the outcome of each test and adjust the test page's background color to the overall test outcome, whereby if only one test fails, the overall test outcome is a failure too.
+After you created the test suite page, just open it in your browser.  Once the test suite page and the page under test are fully loaded, all tests in all registered test sets will be executed automatically.  Jazillionth will then show the outcome of each test and adjust the test suite page's background color to the overall test outcome, whereby if only one test fails, the overall test outcome is a failure too.
 
 And just press Refresh whenever you want to run the tests again!
 
@@ -138,11 +138,11 @@ The presentation of the test results and the exact working of Jazillionth can be
 The complete list of all Jazillionth options is:
 
 * `startAutomatically`: bool (default: `true`)<br>
-  Whether to start all tests automatically when the page-under-test is fully loaded.  If you want the tests to start at another time (for example after pressing a button or after waiting for some AJAX request to finish first), you can set this to `false` and explicitly call `StartTests()` on the Jazillionth object when you are ready to start the tests.
+  Whether to start all tests automatically when the page under test is fully loaded.  If you want the tests to start at another time (for example after pressing a button on the test suite page or after waiting for some AJAX request to finish first), you can set this to `false` and explicitly call `StartTests()` on the Jazillionth object when you are ready to start the tests.
 * `resultElementSpec`: jQuery element selector (default: `undefined`)<br>
-  By default, Jazillionth will append a <div> element at the end of the test page's content and place the test results in there.  If you want the test results to appear somewhere else, specify the jQuery element selector for that location.  The receiving element will also get it's background color set to the resulting test outcome color.
+  By default, Jazillionth will append a <div> element at the end of the test suite page's content and place the test results in there.  If you want the test results to appear somewhere else, specify the jQuery element selector for that location.  The receiving element will also get it's background color set to the resulting test outcome color.
 * `iframeElementSpec`: jQuery element selector (default: `undefined`)<br>
-  By default, Jazillionth will append an <iframe> element at the end of the test page's content and load the page-under-test in there.  If you want to use your own iframe for this, specify the jQuery element selector for that iframe.
+  By default, Jazillionth will append an <iframe> element at the end of the test suite page's content and load the page under test in there.  If you want to use your own iframe for this, specify the jQuery element selector for that iframe.
 * `passColor`: css color code (default: `'#008000'`)<br>
   The background color for passed tests.
 * `failColor`: css color code (default: `'#800000'`)<br>
@@ -152,11 +152,11 @@ The complete list of all Jazillionth options is:
 * `showPassedTests`: bool (default: `true`)<br>
   Whether to also show the tests that passed in the result.
 * `accessObjectNames`: array of strings (default: `[]`)<br>
-  The names of all the JavaScript objects registered on the page-under-test's `window` object to automatically make available to your own testing scripts.
+  The names of all the JavaScript objects registered on the page under test's `window` object to automatically make available to your own testing scripts.
 * `PageReady`: custom function (default: undefined)<br>
-  A user-defined function to run when the page-under-test is ready.  Jazillionth by that time has already accessed the page-under-test's details but hasn't started any tests yet.  It gets passed the fully set-up Jazillionth object doing the tests.  If you want to access additional content and functionality from the page-under-test and perform some extra set-up before running your tests, you can do so here.
+  A user-defined function to run when the page under test is ready.  Jazillionth by that time has already accessed the page under test's details but hasn't started any tests yet.  It gets passed the fully set-up Jazillionth object doing the tests.  If you want to access additional content and functionality from the page under test and perform some extra set-up before running your tests, you can do so here.
 * `IgnoreCallStackLinesWith`: array of string (default: `jquery.com`)<br>
-  If a call stack line from a failed test result contains a string from this list, that call stack line is not displayed.  You can use this to pass in extra library-identifying strings to also suppress other library call stack entries (which would not add clarity to the test result).  No matter what you pass, `jazillionth.js` is always added for you to this list.  Do note that case sensitive string comparison is used!
+  If a call stack line from a failed test result contains a string from this list, that call stack line is not displayed.  You can use this to pass in extra library-identifying strings to suppress library call stack entries (which would not add clarity to the test result).  No matter what you pass, `jazillionth.js` is always added for you to this list.  Do note that case sensitive string comparison is used!
 
 
 
@@ -170,16 +170,16 @@ If you do not have a simple web server to run your tests with, all is not lost! 
 * Python 3:<br>
   `python -m http.server`
 
-If your test page is in a subfolder named 'testing' and named 'testPage.html', you can then open your browser and go to:
+If your test suite page is in a subfolder named 'testing' and named 'testSuite.html', you can then open your browser and go to:
 
-`http://localhost:8000/testing/testPage.html`
+`http://localhost:8000/testing/testSuite.html`
 
 
 
 <a name="examples"></a>
 ## Examples
 
-All examples below can also be found in the `examples` folder in this repository.  Since it's far easier if all examples just use the main `jazillionth.js` file, the file hierarchy might feel a bit upside down; all test pages reach high up to the root of the repository to include the `jazillionth.js` file.  Therefore, when running these examples as-is, ensure your web root is pointing to the repository root.
+All examples below can also be found in the `examples` folder in this repository.  Since it's far easier if all examples just use the main `jazillionth.js` file, the file hierarchy is a bit upside down; all test suite pages reach high up to the root of the repository to include the `jazillionth.js` file.  Therefore, when running these examples as-is, ensure your web root is pointing to the repository root.
 
 
 ### Base example
@@ -289,15 +289,15 @@ jazil.AddTestSet('Main page tests', {
 
 
 
-### Extension #1 - custom test page content
+### Extension #1 - custom test suite page content
 
-We want to specify the test page's layout and color scheme ourselves.  For that we make the following alterations to the base example:
+We want to specify the test suite page's layout and color scheme ourselves.  For that we make the following alterations to the base example:
 
 File `testing/tests.html`: replace `<body></body>` with:
 
 ```html
   <body>
-    <h1>Page-under-test</h1>
+    <h1>Page under test</h1>
     <iframe id="testFrame"></iframe>
 
     <div id="testResult">
@@ -641,7 +641,7 @@ jazil.AddTestSet('Main page tests', {
 
 ### Extension #5 - test an interactive page which stores it's result
 
-The main page now lets the user enter the sum himself.  So automatically running the tests when the page-under-test is ready is not an option anymore, because at that point the user hasn't had a chance to interact with the page yet.  We therefore start the tests ourselves with a button press too.  Plus, the main page now stores the result in `localStorage` too; we need to test if that goes well as well.  The basic example can be changed this way:
+The main page now lets the user enter the sum himself.  So automatically running the tests when the page under test is ready is not an option anymore, because at that point the user hasn't had a chance to interact with the page yet.  We therefore start the tests ourselves with a button press.  Plus, the main page now stores the result in `localStorage` too; we need to test if that goes well as well.  The basic example can be changed this way:
 
 File `main.html`: change `<body></body>` into:
 
@@ -680,7 +680,7 @@ $(document).ready(function() {
 File `testing/tests.html`: update the body content to:
 
 ```html
-    <p>Tests should fail if you don't press &quot;Calculate&quot; on the page-under-test after you change the numbers!</p>
+    <p>Tests should fail if you don't press &quot;Calculate&quot; on the page under test after you change the numbers!</p>
 
     <form><input id="startTests" type="button" value="Start tests"></form>
 ```
