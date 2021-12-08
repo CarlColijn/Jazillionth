@@ -153,7 +153,7 @@ The complete list of all Jazillionth options is:
   Whether to also show the tests that passed in the result.
 * `accessObjectNames`: array of strings (default: `[]`)<br>
   The names of all the JavaScript objects registered on the page under test's `window` object to automatically make available to your own testing scripts.
-* `PageReady`: custom function (default: undefined)<br>
+* `BeforeStart`: custom function (default: undefined)<br>
   A user-defined function to run when the page under test is ready.  Jazillionth by that time has already accessed the page under test's details but hasn't started any tests yet.  It gets passed the fully set-up Jazillionth object doing the tests.  If you want to access additional content and functionality from the page under test and perform some extra set-up before running your tests, you can do so here.
 * `IgnoreCallStackLinesWith`: array of string (default: `jquery.com`)<br>
   If a call stack line from a failed test result contains a string from this list, that call stack line is not displayed.  You can use this to pass in extra library-identifying strings to suppress library call stack entries (which would not add clarity to the test result).  No matter what you pass, `jazillionth.js` is always added for you to this list.  Do note that case sensitive string comparison is used!
@@ -321,14 +321,14 @@ let options = {
 
 
 
-### Extension #2 - add a PageReady handler
+### Extension #2 - add a BeforeStart handler
 
 We want to alert the user when the tests are about to run.  Not very useful, but you can replace the `alert` with anything you like to do instead.  We can augment the base example in the following way:
 
 File `testing/tests.js`: add the following function:
 
 ```js
-function PageReady(jazil) {
+function BeforeStart(jazil) {
   alert('The tests will run when you click OK.  And the page content is:\n\n' + $(jazil.testDocument).find('body').text())
 }
 ```
@@ -338,7 +338,7 @@ File `testing/tests.js`: replace the options with:
 ```js
 let options = {
   'accessObjectNames': ['Summer'],
-  'PageReady': PageReady
+  'BeforeStart': BeforeStart
 }
 ```
 

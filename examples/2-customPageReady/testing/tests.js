@@ -1,11 +1,11 @@
-function PageReady(jazil) {
+function BeforeStart(jazil) {
   alert('The tests will run when you click OK.  And the page content is:\n\n' + $(jazil.testDocument).find('body').text())
 }
 
 
 let options = {
   'accessObjectNames': ['Summer'],
-  'PageReady': PageReady
+  'BeforeStart': BeforeStart
 }
 let jazil = new Jazillionth('../main.html', options)
 
