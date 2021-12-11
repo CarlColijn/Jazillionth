@@ -1,4 +1,4 @@
-jazil.AddTestSet('Main page tests', {
+jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should list the correct sum': function(jazil) {
     let shownResult = parseInt($(jazil.testDocument).find('#sumResult').text())
 

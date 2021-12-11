@@ -12,8 +12,8 @@
 Jazillionth is a light-weight, non-intrusive, easy-to-use testing harness for automatically testing your JavaScript;
 
 * **Light-weight**: Jazillionth comes bundled in a single JavaScript file.  It only depends on jQuery being accessible but has no other dependencies.
-* **Non-intrusive**: you do not need to add anything to the page and script you want to test.  Jazillionth wraps your page and script, and all of your testing code lives in a test suite wrapper around your page.
-* **Easy-to-use**: you only need to create a simple test suite page which links to jQuery and Jazillionth, set up a Jazillionth object on it, and register your page and tests with this object.  Next, just open the test suite page in your browser, and all tests should run automatically.  Done!
+* **Non-intrusive**: you do not need to add anything to the pages and scripts you want to test.  Jazillionth wraps your pages and scripts, and all of your testing code lives in a test suite wrapper around your pages.
+* **Easy-to-use**: you only need to create a simple test suite page which links to jQuery and Jazillionth, set up a Jazillionth object on it, and register your pages and tests with this object.  Next, just open the test suite page in your browser, and all tests should run automatically.  Done!
 
 As expected, Jazillionth doesn't promise the world and beyond, but that makes it very light weight in use and probably Good Enough for most scenarios.
 
@@ -23,13 +23,15 @@ All use cases are explained in the chapters below, and examples are shown in the
 
 ## Obligatory disclaimer
 
-Compared to other simple testing harnesses, the only 'complicated' thing Jazillionth does is load the page to test in an iframe instead of nestling right into the page itself.  This way the page under test can remain totally oblivious to the test suite you wrap around it.  This does however have drawbacks.
+Compared to other simple testing harnesses, the only 'complicated' thing Jazillionth does is load the pages to test in an iframe.  Other testing harnesses require you to add the testing code onto the actual pages themselves.  This means you need to have mechanisms in place to strip this testing code out of your pages again once they are ready to be put into production.  By loading the pages into an iframe, your pages can remain totally oblivious to the test suite you wrap around it.  This also makes it much more likely your pages are truly tested stand-alone and do not unknowingly rely on the testing code itself to be present (even in production).
+
+This does however have drawbacks.
 
 Due to browser security measures (Same Origin policy), both the test suite page and the page under test must be served from the same domain.  One can get around this by using `postMessage`, but that is out of scope for Jazillionth.
 
 Local files (opening files with the `file://` protocol) are not testable either.  However, see the chapter <a href="#setupSimpleServer">Testing without a dedicated web server</a> for instructions on how to overcome this one.
 
-And last (but certainly not least), both the test suite page as well as the page under test running in the iframe have their own scripts.  But the test suite page's script should not run before the page under test's script has run.  Jazillionth seems to get this right, but I have so far not been able to get absolute guarantees that the way Jazillionth manages this is a sure-fire way to ascertain this behavior.  If Jazillionth's tests run before your page under test's scripts have run, please let me know!
+And last (but certainly not least), both the test suite page as well as the pages under test running in the iframe have their own scripts.  But the test suite page's script should not run before the page under test's script has run.  Jazillionth seems to get this right, but I have so far not been able to get absolute guarantees that the way Jazillionth manages this is a sure-fire way to ascertain this behavior.  If Jazillionth's tests run before your page under test's scripts have run, please let me know!
 
 
 
@@ -37,7 +39,7 @@ And last (but certainly not least), both the test suite page as well as the page
 
 This document refers to two pages: the test suite page and the page under test.  The former is the page you use to drive all tests, while the latter is the page being tested.
 
-In this document all Jazillionth object instances are named `jazil` for consistency, but you're free to name it whatever you want.  This name reappears as the name of the sole Jazillionth object as well as the name of the argument passed into all callback functions.
+In this document all Jazillionth object instances are named `jazil` for consistency, but you're free to name it whatever you want.  This name reappears as the name of the central Jazillionth object as well as the name of the argument passed into all callback functions.
 
 
 
@@ -47,45 +49,132 @@ Jazillionth doesn't require much from the test suite page.  The bare minimum nee
 
 1. link to a recent-ish version of jQuery,
 2. link to Jazillionth,
-3. create (and optionally configure) a Jazillionth object, and
-4. link to or inline your own testing code.
+3. link to or inline your own testing code,
+4. create (and optionally configure) a Jazillionth object, and
+5. tell your Jazillionth object what tests to perform on which pages.
 
-By default, Jazillionth doesn't need anything else regarding the test suite page's content.  It will:
+By default, Jazillionth doesn't need anything else regarding the test suite page's content.  In the simplest use case it will:
 
 * wait for the test suite page to be ready,
 * attach an iframe to the test suite page,
-* load the page under test in that iframe,
-* automatically run all your tests when the page under test is fully loaded,
+* for all pages under test:
+  * load the next page under test in that iframe,
+  * wait for that page to fully load,
+  * run all tests for that page.
 * show the test results at the top of the test suite page, and
 * depending on the overall test outcome, set the entire test suite page body background color to either the 'pass' or 'fail' color.
 
-If you want to add extra content to the test suite page you are free to do so.  You can add an iframe to load the page under test into and tell Jazillionth to use that.  You can also tell Jazillionth where to place the test result, directing it to an existing HTML element instead.  And the used colors are tweakable too.  See the chapter <a href="#tweaking">Tweaking and advanced functionality</a> for more details.
+If you want to add extra content to the test suite page you are free to do so.  You can add an iframe to load the page under test into and tell Jazillionth to use that.  You can also tell Jazillionth where to place the test result, directing it to an existing HTML element instead.  And the used colors are tweakable too.  And you can add pre and post test handlers to really tweak the test flow, pausing the tests where needed.  See the chapter <a href="#tweaking">Tweaking and advanced functionality</a> for more details.
 
 
 
 ## Starting up Jazillionth
 
-Before you can register your tests, you have to start up Jazillionth.  You do this by creating a single Jazillionth variable.  You can make this a global variable so that the rest of your script can access it automatically, though all callbacks back from Jazillionth to your code will pass the actual Jazillionth object in as an argument too.
+Before you can register your tests, you have to start up Jazillionth.  You do this by creating a single Jazillionth variable.  You can make this a global variable so that the rest of your scripts can access it automatically, though every time Jazillionth calls back on you it will pass the actual Jazillionth object in as an argument too.
 
-When creating the Jazillionth object, you must give it the URL of the page under test as a first argument.  You can also pass in a second 'options' argument to further tweak Jazillionth.  See the chapter <a href="#tweaking">Tweaking and advanced functionality</a> for more details on this.
+When creating the Jazillionth object, you can also pass in an 'options' argument to further tweak Jazillionth.  See the chapter <a href="#tweaking">Tweaking and advanced functionality</a> for more details on this.
 
 So basically, you must only add:
 
-`let jazil = new Jazillionth('/path/to/page under test.html')`
+`let jazil = new Jazillionth()`
 
-and Jazillionth is up-and-running.
+and Jazillionth is up-and-running, waiting for pages and tests to be registered.
 
 
 
 ## Registering and defining tests
 
-Individual tests are registered in named sets.  When listing the test results, these test sets form logical sections in the result listing.  This allows you to, for example, define a different test set per tested module to make the test result listing line up nicely with your internal code structure for an easier overview.
+Jazillionth allows you to test multiple pages in one go, each with its own sets of tests.  First you add a page to test, then you add test set(s) to that page to test; these test sets hold the individual test functions themselves.  The object hierarchy thus becomes:
 
-Test sets themselves are simple dictionaries, where each key is the name of the individual test, and each value is a function performing that test.  You register these test sets with Jazillionth by calling `AddTestSet`.
+* 0 or more test pages (TestPage objects)
+  * 0 or more test sets (TestSet objects)
+    * 0 or more test functions (dictionary of test functions)
 
-When executing, your testing functions get passed the actual Jazillionth object performing the tests.  You can also just ignore it and access the single Jazillionth object you created yourself; they are really the same thing.  In your test functions you can call back on this Jazillionth object to assert (and thus report) the test result(s).
+To add a page to test, call `AddPageToTest(name, url[, accessObjectNames])`;
 
-The following test assertion functions can be used:
+* `name`: string<br>
+  A reference name for use in the test result listing.
+* `url`: string<br>
+  The page's URL.
+* `accessObjectNames`: array of string (optional)<br>
+  A list of the names of the JavaScript objects to make available to your test scripts.
+
+`AddPageToTest` returns the created TestPage object to you.  You must use this to later register test sets for it.  You can also access it's properties wherever you encounter it in your callback functions and test functions.  These are:
+
+* `name`: string<br>
+  The specified name.
+* `url`: string<br>
+  The specified URL.
+* `accessObjectNames`: array of string, or `undefined`<br>
+  The specified names to access.  If you passed no names, this property will be set to `undefined`.
+* `testSets`: array of TestSet objects<br>
+  All test sets you registered for this page under test (see below).
+
+Example:
+
+```js
+let mainPage = jazil.AddPageToTest('Main page', '/path/to/main-page-to-test.html')
+```
+
+With this TestPage variable `mainPage` in hand, you are ready to add one or more named test sets to it.  When listing the test results, these test sets form logical sections in the result listing.  This allows you to, for example, define a different test set per tested module in that page to make the test result listing line up nicely with your internal code structure for an easier overview.
+
+Test sets themselves are a combination of a name and a simple dictionary holding the test functions.  In this dictionary, each key is the name of the individual test function, and each value is the function performing that test.  You register test sets with Jazillionth by calling `AddTestSet(testPage, name, testFunctions)`;
+
+* `testPage`: TestPage object<br>
+  The TestPage object you got from calling `AddPageToTest`, representing the page to test to add the test set to.
+* `name`: string<br>
+  The name of the test set.
+* `testFunctions`: dictionary of test functions<br>
+  All test functions you run in this test set, indexed by their name.
+
+The resulting TestSet object will get the following properties:
+
+* `name`: string<br>
+  The name you specified.
+* `tests`: dictionary of test functions<br>
+  The test function dictionary you specified.
+
+The test functions themselves should have the following signature;
+
+```js
+function(jazil, testName, testSet, testPage) {
+}
+```
+
+The function arguments are:
+* `jazil`: Jazillionth object<br>
+  The actual Jazillionth object performing the tests.
+* `testName`: string<br>
+  The name under which this test function was registered in the test function dictionary.
+* `testSet`: TestSet object<br>
+  The test set object the test function belongs to.
+* `testPage`: TestPage object<br>
+  The test page object the test set belongs to.
+
+You do not need to return anything from a test function.  Also note that if you have no use for the latter arguments, you do not need to add them to your test function signature.
+
+Example:
+
+```js
+let tests = {
+  'Test X': function(jazil) {
+    // test X comes here
+  },
+  'Test Y': function(jazil, testName, testSet, testPage) {
+    // test Y comes here
+    // testName should be 'Test Y'
+    // testSet should be the TestSet object we're part of
+    // testPage should be the TestPage object we got from AddPageToTest (stored in mainPage)
+  }
+}
+jazil.AddTestSet(mainPage, 'Main tests', tests)
+```
+
+Note that the passed in Jazillionth object and the one you created yourself are really the same thing.
+
+Inside your test functions you perform the actual test(s) using the appropriate assertion functions on the given `jazil` object.  The results of your tests are implicitly determined by the result of these assertion functions.  You therefore do not need to return anything from your function; if all tests pass (so no assertion function got triggered), the test function itself is marked as passed too.  Do note that as soon as an assertion function fails, the rest of the code in your test function after the call to that assertion function will not execute anymore.
+
+The following assertion functions can be used:
 
 * `jazil.Fail(message)`<br>
   Fails with the given message.
@@ -104,7 +193,7 @@ The following test assertion functions can be used:
 * `jazil.ShouldNotBeBetween(value, expectedLower, expectedHigher, message)`<br>
   The opposite of `jazil.ShouldBeBetween`.
 
-Note that in all these assertion calls the message is optional.  Jazillionth will always show where the fail happened (file and line number), so if a test only has one single check the message is probably redundant (the test name and the details added by, for example, `ShouldBe` should say enough).  But if a test function holds more than one check, the message can be used to easily pinpoint which check failed.
+Note that with all these assertion functions the message is optional.  Jazillionth will always show where the fail happened (file and line number), so if a test only has one single check the message is probably redundant (the test name and the details added by, for example, `ShouldBe` should say enough).  But if a test function calls more than one assertion function, the message can be used to easily pinpoint which assertion failed.
 
 Note also that there is no opposite to `jazil.Fail`; if a test goes well, you do not have to report anything.
 
@@ -114,19 +203,43 @@ Note also that there is no opposite to `jazil.Fail`; if a test goes well, you do
 
 Since the page under test is loaded in a separate iframe, your testing scripts cannot easily access it's HTML content nor it's JavaScript functions and global variables, etc.  But Jazillionth will help out with this.
 
-When creating the Jazillionth object you can tell it to automatically make certain JavaScript objects available for direct use in your scripts.  Do this by specifying the option `accessObjectNames`, which should hold the names of all the JavaScript objects in the page under test you want to access.  Once the page under test has loaded, Jazillionth will try to access each one of these objects and make an alias to them under the test suite page's window.  After that they are accessible just as if they were declared in your own script.
+When adding a page to test you can tell Jazillionth to automatically make certain JavaScript objects available for direct use in your scripts.  Do this by specifying the `accessObjectNames` argument to `AddPageToTest`.  You should pass an array holding the names of all the JavaScript objects you want to access on that page.  Once that page has loaded, Jazillionth will try to access each one of these objects and make an alias to them under the test suite page's window.  After that these objects are accessible just as if they were declared in your own script.
 
-A caveat here is that Jazillionth can only access JavaScript objects that are registered on the page under test's window object.  Your functions are automatically added there, as well as global variables declared with `var`.  But global variables declared with `let` are not accessible.  If you want to access `let` declared variables in your testing scripts, either change them to `var` variables, or add an accessor function for them.
+A caveat here is that Jazillionth can only access JavaScript objects that are registered on the page under test's window object.  Functions are automatically added there, as well as global variables declared with `var`.  But global variables declared with `let` are not accessible.  If you want to access `let` declared variables in your testing scripts, either change them to `var` variables, or add an accessor function for them.
 
-Jazillionth also makes two other objects accessible: the page under test's `window` and `document` objects.  You can find these under `jazil.testDocument` and `jazil.testWindow` respectively.  You can use these to access, for example, the page under test's body content, the rest of the page under test's global JavaScript variables and functions, as well as the page's `location`, `history` and `localstorage` objects.
+Jazillionth also makes two other objects accessible: the current page under test's `window` and `document` objects.  You can find these under `jazil.testDocument` and `jazil.testWindow` respectively.  You can use these to access, for example, the page under test's body content, the rest of the page under test's global JavaScript variables and functions, as well as the page's `location`, `history` and `localstorage` objects.
 
 
 
 ## Running the tests
 
-After you created the test suite page, just open it in your browser.  Once the test suite page and the page under test are fully loaded, all tests in all registered test sets will be executed automatically.  Jazillionth will then show the outcome of each test and adjust the test suite page's background color to the overall test outcome, whereby if only one test fails, the overall test outcome is a failure too.
+After you created the test suite page, just open it in your browser.  Once the test suite page is fully loaded, Jazillionth will load all pages under test one by one.  For each page under test, once it is fully loaded, all tests in all registered test sets for that page will be executed automatically.  When all pages have been tested, Jazillionth will show the outcome of each test.  It will also adjust the test suite page's background color to the overall test outcome, whereby if only one test fails, the overall test outcome is a failure too.
 
 And just press Refresh whenever you want to run the tests again!
+
+
+
+<a name="advancedTestFlow"></a>
+## Intervening in the test flow
+
+Simple pages with simple content can be tested statically without problem.  The same goes for individual test sets which only perform tests on statically scoped test conditions.  For these tests it is OK to just run all tests on all pages back-to-back without interruption; this is what Jazillionth does by default.
+
+However, when your test sets depend on user interaction, you can alter the test flow by using custom event handlers and/or starting/pausing/continuing the tests on your own terms.  These can all be controlled via initialization options.  The following mechanisms are in place for this:
+
+* option `startAutomatically`<br>
+  When you set this option to `false`, Jazillionth will not start automatically when the test suite page has loaded.  If you want the tests to start at another time (for example after pressing a button on the test suite page or after waiting for some AJAX request to finish first), you can set this to `false` and explicitly call `StartTests()` on the Jazillionth object when you are ready to start the tests.
+* option `OnBeforePageTests`<br>
+  A user-defined event handler to run before the test sets for each page under test have started.  By that time the page is fully loaded and ready, and Jazillionth has already accessed the page under test's details.  If you want to access additional content and functionality from the current page under test and perform some extra set-up before running your tests, you can do so in this event handler.<br>
+  It's signature should be `OnBeforePageTests(jazil, testPage)`.  `jazil` is the fully set-up Jazillionth object doing the tests, and `testPage` is the TestPage object returned by the original call to `AddPageToTest`.  You can return `true` to stop all tests in their tracks at this point; returning in any other way will make the tests continue.
+* option `OnAfterPageTests`<br>
+  A user-defined event handler to run after each page under test is tested.  It's signature should be `OnAfterPageTests(jazil, testPage, testedOK)`.  `jazil` is the fully set-up Jazillionth object doing the tests, `testPage` is the TestPage object returned by the original call to `AddPageToTest`, and `testedOK` is a boolean indicating if all tests ran OK for this page.
+* option `OnBeforeSetTests`<br>
+  A user-defined event handler to run before the tests for each test set on a page under test have started.  If you want to access additional content and functionality from the current page under test and perform some extra set-up before running your tests, you can do so in this event handler.<br>
+  It's signature should be `OnBeforeSetTests(jazil, testPage, testSet)`.  `jazil` is the fully set-up Jazillionth object doing the tests, `testPage` is the TestPage object returned by the original call to `AddPageToTest`, and `testSet` is the TestSet object returned by the original call to `AddTestSet`.  You can return `true` to stop all tests in their tracks at this point; returning in any other way will make the tests continue.
+* option `OnAfterPageTests`<br>
+  A user-defined function to run after each test set on a page under test is tested.  It's signature should be `OnAfterSetTests(jazil, testPage, testSet, testedOK)`.  `jazil` is the fully set-up Jazillionth object doing the tests, `testPage` is the TestPage object returned by the original call to `AddPageToTest`, `testSet` is the TestSet object returned by the original call to `AddTestSet`, and `testedOK` is a boolean indicating if all tests ran OK for this test set.
+
+If you let Jazillionth pause it's testing, then you can continue the tests at a later time by calling `ContinueTests` on the Jazillionth object.  For a more finely controlled code execution flow you can pass an optional boolean argument to indicate you want a delayed continuation.  With delayed continuation the tests will only resume running after your current script is done.  (This is arranged via a setTimeout with a delay of zero.)
 
 
 
@@ -137,8 +250,6 @@ The presentation of the test results and the exact working of Jazillionth can be
 
 The complete list of all Jazillionth options is:
 
-* `startAutomatically`: bool (default: `true`)<br>
-  Whether to start all tests automatically when the page under test is fully loaded.  If you want the tests to start at another time (for example after pressing a button on the test suite page or after waiting for some AJAX request to finish first), you can set this to `false` and explicitly call `StartTests()` on the Jazillionth object when you are ready to start the tests.
 * `resultElementSpec`: jQuery element selector (default: `undefined`)<br>
   By default, Jazillionth will append a <div> element at the end of the test suite page's content and place the test results in there.  If you want the test results to appear somewhere else, specify the jQuery element selector for that location.  The receiving element will also get it's background color set to the resulting test outcome color.
 * `iframeElementSpec`: jQuery element selector (default: `undefined`)<br>
@@ -151,12 +262,18 @@ The complete list of all Jazillionth options is:
   The color for text and borders.
 * `showPassedTests`: bool (default: `true`)<br>
   Whether to also show the tests that passed in the result.
-* `accessObjectNames`: array of strings (default: `[]`)<br>
-  The names of all the JavaScript objects registered on the page under test's `window` object to automatically make available to your own testing scripts.
-* `BeforeStart`: custom function (default: undefined)<br>
-  A user-defined function to run when the page under test is ready.  Jazillionth by that time has already accessed the page under test's details but hasn't started any tests yet.  It gets passed the fully set-up Jazillionth object doing the tests.  If you want to access additional content and functionality from the page under test and perform some extra set-up before running your tests, you can do so here.
 * `IgnoreCallStackLinesWith`: array of string (default: `jquery.com`)<br>
-  If a call stack line from a failed test result contains a string from this list, that call stack line is not displayed.  You can use this to pass in extra library-identifying strings to suppress library call stack entries (which would not add clarity to the test result).  No matter what you pass, `jazillionth.js` is always added for you to this list.  Do note that case sensitive string comparison is used!
+  If a call stack line from a failed test result contains a string from this list, that call stack line is not displayed.  You can use this to pass in extra library identifying strings to suppress library call stack entries (which would not add clarity to the test result).  No matter what you pass, `jazillionth.js` is always added for you to this list.  Do note that case sensitive string comparison is used!
+* `startAutomatically`: bool (default: `true`)<br>
+  Whether to start all tests automatically when the test suite page is fully loaded.  See the chapter <a href="advancedTestFlow">Intervening in the test flow</a> for more details.
+* `OnBeforePageTests`: custom event handler (default: undefined)<br>
+  Event handler running before the tests of a page have run.  See the chapter <a href="advancedTestFlow">Intervening in the test flow</a> for more details.
+* `OnAfterPageTests`: custom event handler (default: undefined)<br>
+  Event handler running after the tests of a page have run.  See the chapter <a href="advancedTestFlow">Intervening in the test flow</a> for more details.
+* `OnBeforeSetTests`: custom event handler (default: undefined)<br>
+  Event handler running before the tests of a test set have run.  See the chapter <a href="advancedTestFlow">Intervening in the test flow</a> for more details.
+* `OnAfterPageTests`: custom event handler (default: undefined)<br>
+  Event handler running after the tests of a test set have run.  See the chapter <a href="advancedTestFlow">Intervening in the test flow</a> for more details.
 
 
 
@@ -255,13 +372,11 @@ File `testing/tests.html`:
 File `testing/tests.js`:
 
 ```js
-let options = {
-  'accessObjectNames': ['Summer']
-}
-let jazil = new Jazillionth('../main.html', options)
+let jazil = new Jazillionth()
+let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer'])
 
 
-jazil.AddTestSet('Summer tests', {
+jazil.AddTestSet(mainPage, 'Summer tests', {
   'Summer should know 1 + 1': function(jazil) {
     let summer = new Summer
 
@@ -282,7 +397,7 @@ jazil.AddTestSet('Summer tests', {
 })
 
 
-jazil.AddTestSet('Main page tests', {
+jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should list the correct answer': function(jazil) {
     let shownResult = parseInt($(jazil.testDocument).find('#result').text())
 
@@ -312,43 +427,20 @@ File `testing/tests.html`: replace `<body></body>` with:
   </body>
 ```
 
-File `testing/tests.js`: replace the options with:
+File `testing/tests.js`: replace the jazil initialization with:
 
 ```js
 let options = {
-  'accessObjectNames': ['Summer'],
   'resultElementSpec': '#testResult',
   'iframeElementSpec': '#testFrame',
   'passColor': '#000080' // blue is a better green
 }
+let jazil = new Jazillionth(options)
 ```
 
 
 
-### Example #2 - add a BeforeStart handler
-
-We want to alert the user when the tests are about to run.  Not very useful, but you can replace the `alert` with anything you like to do instead.  We can augment the base example in the following way:
-
-File `testing/tests.js`: add the following function:
-
-```js
-function BeforeStart(jazil) {
-  alert('The tests will run when you click OK.  And the page content is:\n\n' + $(jazil.testDocument).find('body').text())
-}
-```
-
-File `testing/tests.js`: replace the options with:
-
-```js
-let options = {
-  'accessObjectNames': ['Summer'],
-  'BeforeStart': BeforeStart
-}
-```
-
-
-
-### Example #3 - test sets split over multiple scripts
+### Example #2 - test sets split over multiple scripts
 
 The main page is now going to use a new sum, as well as show a complex multiplication!
 
@@ -415,16 +507,14 @@ File `testing/tests.js`: we're going to divide this up over several files, so it
 File `testing/configure.js`: this one only gets the configuration part:
 
 ```js
-let options = {
-  'accessObjectNames': ['Summer', 'Multiplier']
-}
-let jazil = new Jazillionth('../main.html', options)
+let jazil = new Jazillionth()
+let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer', 'Multiplier'])
 ```
 
 File `testing/summer.js`: this gets the test set for `Summer`:
 
 ```js
-jazil.AddTestSet('Summer tests', {
+jazil.AddTestSet(mainPage, 'Summer tests', {
   'Summer should know 1 + 1': function(jazil) {
     let summer = new Summer
 
@@ -448,7 +538,7 @@ jazil.AddTestSet('Summer tests', {
 File `testing/multiplier.js`: this gets the test set for `Multiplier`:
 
 ```js
-jazil.AddTestSet('Multiplier tests', {
+jazil.AddTestSet(mainPage, 'Multiplier tests', {
   'Multiplier should know 2 * 3': function(jazil) {
     let multiplier = new Multiplier
 
@@ -472,7 +562,7 @@ jazil.AddTestSet('Multiplier tests', {
 File `testing/main.js`: this gets the test set for the main page:
 
 ```js
-jazil.AddTestSet('Main page tests', {
+jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should list the correct sum': function(jazil) {
     let shownResult = parseInt($(jazil.testDocument).find('#sumResult').text())
 
@@ -497,7 +587,7 @@ File `testing/tests.html`: this should now link to the following scripts.  Note 
 
 
 
-### Example #4 - more rigorous testing
+### Example #3 - more rigorous testing
 
 Summer gets a little boost -- it now tracks whether it has been used!  So, let's check for that.  And we didn't really properly test `Summer` before, so let's make up for that too.  And what do you know: we made a mistake in our test, so one of 'em fails now.  We alter the base example in the following way:
 
@@ -530,13 +620,11 @@ Summer.prototype.CanAdd = function() {
 File `testing/tests.js`: replace it with the following code:
 
 ```js
-let options = {
-  'accessObjectNames': ['Summer', 'g_summerUsed']
-}
-let jazil = new Jazillionth('../main.html', options)
+let jazil = new Jazillionth()
+let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer', 'g_summerUsed'])
 
 
-jazil.AddTestSet('module Summer', {
+jazil.AddTestSet(mainPage, 'module Summer', {
   'Summer should have been used by the test page by now': function(jazil) {
     jazil.Assert(g_summerUsed, 'g_summerUsed is not set yet')
   },
@@ -649,7 +737,7 @@ jazil.AddTestSet('module Summer', {
 })
 
 
-jazil.AddTestSet('Main page tests', {
+jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should list the correct answer': function(jazil) {
     let shownResult = parseInt($(jazil.testDocument).find('#result').text())
 
@@ -660,7 +748,63 @@ jazil.AddTestSet('Main page tests', {
 
 
 
-### Example #5 - test an interactive page which stores it's result
+### Example #4 - test a page which manipulates localStorage
+
+The numbers to sum on the main page are now not static anymore but are maintained via `localStorage`.  We need to test if that goes well as well.  The basic example can be changed this way:
+
+File `main.html`: change `<body></body>` into:
+
+```html
+  <body>
+    <p>Press Refresh to calculate the next sum.</p>
+    <p>1 + <span id="value2">?</span> = <span id="result">?</span></p>
+  </body>
+```
+
+File `scripts/main.js`: update it to:
+
+```js
+$(document).ready(function() {
+  let value1 = 1
+  let value2 = parseInt(localStorage.getItem('value2'))
+  if (isNaN(value2))
+    value2 = 0
+  else
+    ++value2
+
+  let summer = new Summer
+  summer.Add(value1)
+  summer.Add(value2)
+  let result = summer.Result()
+
+  $('#value2').text(value2)
+  localStorage.setItem('value2', value2)
+  $('#result').text(result)
+  localStorage.setItem('result', result)
+})
+```
+
+File `testing\tests.js`: update the main page test set to:
+
+```js
+jazil.AddTestSet(mainPage, 'Main page tests', {
+  'The main page should calculate the correct answer': function(jazil) {
+    let storedValue2 = parseInt(jazil.testWindow.localStorage.getItem('value2'))
+    let storedResult = parseInt(jazil.testWindow.localStorage.getItem('result'))
+    let shownResult = parseInt($(jazil.testDocument).find('#result').text())
+
+    jazil.Assert(!isNaN(storedResult), 'stored result is not numeric')
+    jazil.Assert(!isNaN(storedValue2), 'stored value2 is not numeric')
+    jazil.Assert(!isNaN(shownResult), 'shown result is not numeric')
+    jazil.ShouldBe(shownResult, 1 + storedValue2, 'shown result is not correct')
+    jazil.ShouldBe(shownResult, storedResult, 'shown result is off from stored result')
+  },
+})
+```
+
+
+
+### Example #5 - use event handlers to test an interactive page
 
 The main page now lets the user enter the sum himself.  So automatically running the tests when the page under test is ready is not an option anymore, because at that point the user hasn't had a chance to interact with the page yet.  We therefore start the tests ourselves with a button press.  Plus, the main page now stores the result in `localStorage` too; we need to test if that goes well as well.  The basic example can be changed this way:
 
@@ -702,8 +846,6 @@ File `testing/tests.html`: update the body content to:
 
 ```html
   <body>
-    <p>Tests should fail if you don't press &quot;Calculate&quot; on the page under test after you change the numbers!</p>
-
     <form><input id="startTests" type="button" value="Start tests"></form>
   </body>
 ```
@@ -711,21 +853,66 @@ File `testing/tests.html`: update the body content to:
 File `testing\tests.js`: update it to:
 
 ```js
+let pauseMainTests = true
+
+
+function OnBeforePageTests(jazil, testPage) {
+  alert('Running test page "' + testPage.name + '"')
+
+  // Hijack the 'Calculate' button in the main page to eventually
+  // resume testing.
+  $(jazil.testDocument).find('#calculate').on('click', () => {
+    pauseMainTests = false
+    // Continue delayed, so that we're sure the page's own code
+    // ran for the calculate button.
+    jazil.ContinueTests(true)
+  })
+}
+
+
+function OnAfterPageTests(jazil, testPage, testedOK) {
+  alert('Done running test page "' + testPage.name + '"; ' + (testedOK ? 'tests passed' : 'tests failed'))
+}
+
+
+function OnBeforeSetTests(jazil, testPage, testSet) {
+  let testSetDescription = 'test set "' + testPage.name + '/' + testSet.name + '"'
+
+  let pauseJazillionth = testSet === mainSet && pauseMainTests
+  if (pauseJazillionth)
+    alert('Pausing ' + testSetDescription + '\n\nPress Calculate on the main page to resume tests.')
+  else
+    alert('Running ' + testSetDescription)
+
+  return pauseJazillionth
+}
+
+
+function OnAfterSetTests(jazil, testPage, testSet, testedOK) {
+  alert('Done running test set "' + testPage.name + '/' + testSet.name + '"; ' + (testedOK ? 'tests passed' : 'tests failed'))
+}
+
+
+let options = {
+  'startAutomatically': false,
+  'OnBeforePageTests': OnBeforePageTests,
+  'OnAfterPageTests': OnAfterPageTests,
+  'OnBeforeSetTests': OnBeforeSetTests,
+  'OnAfterSetTests': OnAfterSetTests
+}
+let jazil = new Jazillionth(options)
 $(document).ready(function() {
   $('#startTests').on('click', function() {
+    pauseMainTests = true
     jazil.StartTests()
   })
 })
 
 
-let options = {
-  'accessObjectNames': ['Summer'],
-  'startAutomatically': false
-}
-let jazil = new Jazillionth('../main.html', options)
+let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer'])
 
 
-jazil.AddTestSet('Summer tests', {
+let summerSet = jazil.AddTestSet(mainPage, 'Summer tests', {
   'Summer should know 1 + 1': function(jazil) {
     let summer = new Summer
 
@@ -759,7 +946,7 @@ function GetMainPageState(jazil) {
 }
 
 
-jazil.AddTestSet('Main page tests', {
+let mainSet = jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should show the correct answer': function(jazil) {
     let state = GetMainPageState(jazil)
 

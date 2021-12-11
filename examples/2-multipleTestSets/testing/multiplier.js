@@ -1,4 +1,4 @@
-jazil.AddTestSet('Multiplier tests', {
+jazil.AddTestSet(mainPage, 'Multiplier tests', {
   'Multiplier should know 2 * 3': function(jazil) {
     let multiplier = new Multiplier
 

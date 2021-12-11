@@ -1,10 +1,8 @@
-let options = {
-  'accessObjectNames': ['Summer']
-}
-let jazil = new Jazillionth('../main.html', options)
+let jazil = new Jazillionth()
+let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer'])
 
 
-jazil.AddTestSet('Summer tests', {
+jazil.AddTestSet(mainPage, 'Summer tests', {
   'Summer should know 1 + 1': function(jazil) {
     let summer = new Summer
 
@@ -25,7 +23,7 @@ jazil.AddTestSet('Summer tests', {
 })
 
 
-jazil.AddTestSet('Main page tests', {
+jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should list the correct answer': function(jazil) {
     let shownResult = parseInt($(jazil.testDocument).find('#result').text())
 

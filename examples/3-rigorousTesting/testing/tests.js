@@ -1,10 +1,8 @@
-let options = {
-  'accessObjectNames': ['Summer', 'g_summerUsed']
-}
-let jazil = new Jazillionth('../main.html', options)
+let jazil = new Jazillionth()
+let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer', 'g_summerUsed'])
 
 
-jazil.AddTestSet('module Summer', {
+jazil.AddTestSet(mainPage, 'module Summer', {
   'Summer should have been used by the test page by now': function(jazil) {
     jazil.Assert(g_summerUsed, 'g_summerUsed is not set yet')
   },
@@ -117,7 +115,7 @@ jazil.AddTestSet('module Summer', {
 })
 
 
-jazil.AddTestSet('Main page tests', {
+jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should list the correct answer': function(jazil) {
     let shownResult = parseInt($(jazil.testDocument).find('#result').text())
 

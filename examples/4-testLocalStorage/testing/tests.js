@@ -1,9 +1,4 @@
-let options = {
-  'resultElementSpec': '#testResult',
-  'iframeElementSpec': '#testFrame',
-  'passColor': '#000080' // blue is a better green
-}
-let jazil = new Jazillionth(options)
+let jazil = new Jazillionth()
 let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer'])
 
 
@@ -29,9 +24,15 @@ jazil.AddTestSet(mainPage, 'Summer tests', {
 
 
 jazil.AddTestSet(mainPage, 'Main page tests', {
-  'The main page should list the correct answer': function(jazil) {
+  'The main page should calculate the correct answer': function(jazil) {
+    let storedValue2 = parseInt(jazil.testWindow.localStorage.getItem('value2'))
+    let storedResult = parseInt(jazil.testWindow.localStorage.getItem('result'))
     let shownResult = parseInt($(jazil.testDocument).find('#result').text())
 
-    jazil.ShouldBe(shownResult, 5)
-  }
+    jazil.Assert(!isNaN(storedResult), 'stored result is not numeric')
+    jazil.Assert(!isNaN(storedValue2), 'stored value2 is not numeric')
+    jazil.Assert(!isNaN(shownResult), 'shown result is not numeric')
+    jazil.ShouldBe(shownResult, 1 + storedValue2, 'shown result is not correct')
+    jazil.ShouldBe(shownResult, storedResult, 'shown result is off from stored result')
+  },
 })

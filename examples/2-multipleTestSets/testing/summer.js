@@ -1,4 +1,4 @@
-jazil.AddTestSet('Summer tests', {
+jazil.AddTestSet(mainPage, 'Summer tests', {
   'Summer should know 1 + 1': function(jazil) {
     let summer = new Summer
 
