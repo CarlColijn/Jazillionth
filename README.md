@@ -174,6 +174,8 @@ If your test suite page is in a subfolder named 'testing' and named 'testSuite.h
 
 `http://localhost:8000/testing/testSuite.html`
 
+If you have Python 3 installed, then you can also use `testExamples.py` from the root of this repository.  This is a python script which automatically starts a web server serving the examples, and which opens all examples in your default browser.
+
 
 
 <a name="examples"></a>
@@ -182,7 +184,7 @@ If your test suite page is in a subfolder named 'testing' and named 'testSuite.h
 All examples below can also be found in the `examples` folder in this repository.  Since it's far easier if all examples just use the main `jazillionth.js` file, the file hierarchy is a bit upside down; all test suite pages reach high up to the root of the repository to include the `jazillionth.js` file.  Therefore, when running these examples as-is, ensure your web root is pointing to the repository root.
 
 
-### Base example
+### Example #0 - base example
 
 We want to test a simple HTML page which uses a `Summer` class to sum two numbers on-the-spot.  The `Summer` class is located in its own file `summer.js`, and the main page code is located in the file `main.js`.
 
@@ -191,12 +193,13 @@ File `main.html`:
 ```html
 <html>
   <head>
-    <script src="https://code.jQuery.com/jQuery-3.5.1.min.js"></script>
+    <meta charset="utf-8">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="scripts/summer.js"></script>
     <script src="scripts/main.js"></script>
   </head>
   <body>
-    1 + 4 = <span id="sumResult">?</span>
+    1 + 4 = <span id="result">?</span>
   </body>
 </html>
 ```
@@ -231,7 +234,7 @@ $(document).ready(function() {
   let summer = new Summer
   summer.Add(1)
   summer.Add(4)
-  $('#sumResult').text(summer.Result())
+  $('#result').text(summer.Result())
 })
 ```
 
@@ -240,7 +243,8 @@ File `testing/tests.html`:
 ```html
 <html>
   <head>
-    <script src="https://code.jQuery.com/jQuery-3.5.1.min.js"></script>
+    <meta charset="utf-8">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="../../../jazillionth.js"></script>
     <script src="tests.js"></script>
   </head>
@@ -280,16 +284,16 @@ jazil.AddTestSet('Summer tests', {
 
 jazil.AddTestSet('Main page tests', {
   'The main page should list the correct answer': function(jazil) {
-    let shownResult = jazil.testDocument.find('#sumResult').text()
+    let shownResult = parseInt($(jazil.testDocument).find('#result').text())
 
-    jazil.Assert(shownResult.parseInt(), 5)
+    jazil.ShouldBe(shownResult, 5)
   }
 })
 ```
 
 
 
-### Extension #1 - custom test suite page content
+### Example #1 - custom test suite page content
 
 We want to specify the test suite page's layout and color scheme ourselves.  For that we make the following alterations to the base example:
 
@@ -315,13 +319,13 @@ let options = {
   'accessObjectNames': ['Summer'],
   'resultElementSpec': '#testResult',
   'iframeElementSpec': '#testFrame',
-  'passColor': '#408000' // moss is a better green
+  'passColor': '#000080' // blue is a better green
 }
 ```
 
 
 
-### Extension #2 - add a BeforeStart handler
+### Example #2 - add a BeforeStart handler
 
 We want to alert the user when the tests are about to run.  Not very useful, but you can replace the `alert` with anything you like to do instead.  We can augment the base example in the following way:
 
@@ -344,7 +348,7 @@ let options = {
 
 
 
-### Extension #3 - multiple test sets
+### Example #3 - test sets split over multiple scripts
 
 The main page is now going to use a new sum, as well as show a complex multiplication!
 
@@ -377,7 +381,6 @@ File `main.html`: add the following script include:
 
 ```html
     <script src="scripts/multiplier.js"></script>
-
 ```
 
 File `main.html`: replace `<body></body>` with:
@@ -387,6 +390,24 @@ File `main.html`: replace `<body></body>` with:
     1 + 2 + 4 = <span id="sumResult">?</span><br>
     2 * 3 * 5 = <span id="multiplyResult">?</span>
   </body>
+```
+
+File `scripts/main.js`: replace its content with:
+
+```js
+$(document).ready(function() {
+  let summer = new Summer
+  summer.Add(1)
+  summer.Add(2)
+  summer.Add(4)
+  $('#sumResult').text(summer.Result())
+
+  let multiplier = new Multiplier
+  multiplier.Add(2)
+  multiplier.Add(3)
+  multiplier.Add(5)
+  $('#multiplyResult').text(multiplier.Result())
+})
 ```
 
 File `testing/tests.js`: we're going to divide this up over several files, so it can be deleted.
@@ -453,14 +474,14 @@ File `testing/main.js`: this gets the test set for the main page:
 ```js
 jazil.AddTestSet('Main page tests', {
   'The main page should list the correct sum': function(jazil) {
-    let shownResult = $(jazil.testDocument).find('#sumResult').text()
+    let shownResult = parseInt($(jazil.testDocument).find('#sumResult').text())
 
-    jazil.Assert(parseInt(shownResult), 7)
-  }
+    jazil.ShouldBe(shownResult, 7)
+  },
   'The main page should list the correct multiplication': function(jazil) {
-    let shownResult = $(jazil.testDocument).find('#multiplyResult').text()
+    let shownResult = parseInt($(jazil.testDocument).find('#multiplyResult').text())
 
-    jazil.Assert(parseInt(shownResult), 30)
+    jazil.ShouldBe(shownResult, 30)
   }
 })
 ```
@@ -476,7 +497,7 @@ File `testing/tests.html`: this should now link to the following scripts.  Note 
 
 
 
-### Extension # 4 - more rigorous testing
+### Example #4 - more rigorous testing
 
 Summer gets a little boost -- it now tracks whether it has been used!  So, let's check for that.  And we didn't really properly test `Summer` before, so let's make up for that too.  And what do you know: we made a mistake in our test, so one of 'em fails now.  We alter the base example in the following way:
 
@@ -630,16 +651,16 @@ jazil.AddTestSet('module Summer', {
 
 jazil.AddTestSet('Main page tests', {
   'The main page should list the correct answer': function(jazil) {
-    let shownResult = $(jazil.testDocument).find('#sumResult').text()
+    let shownResult = parseInt($(jazil.testDocument).find('#result').text())
 
-    jazil.Assert(parseInt(shownResult), 5)
+    jazil.ShouldBe(shownResult, 5)
   }
 })
 ```
 
 
 
-### Extension #5 - test an interactive page which stores it's result
+### Example #5 - test an interactive page which stores it's result
 
 The main page now lets the user enter the sum himself.  So automatically running the tests when the page under test is ready is not an option anymore, because at that point the user hasn't had a chance to interact with the page yet.  We therefore start the tests ourselves with a button press.  Plus, the main page now stores the result in `localStorage` too; we need to test if that goes well as well.  The basic example can be changed this way:
 
@@ -649,7 +670,7 @@ File `main.html`: change `<body></body>` into:
   <body>
     <form>
       Enter the values:<br>
-      <input id="value1" type="number" value="1"> + <input id="value2" type="number" value="2"> = <input id="sumResult" type="number"><br>
+      <input id="value1" type="number" value="1"> + <input id="value2" type="number" value="2"> = <input id="result" type="number"><br>
       <input id="calculate" type="button" value="Calculate">
     </form>
   </body>
@@ -667,8 +688,8 @@ function Calculate() {
   summer.Add(value2)
   let result = summer.Result()
 
-  $('#sumResult').val(result)
-  localStorage.setItem('sumResult', result)
+  $('#result').val(result)
+  localStorage.setItem('result', result)
 }
 
 
@@ -680,9 +701,11 @@ $(document).ready(function() {
 File `testing/tests.html`: update the body content to:
 
 ```html
+  <body>
     <p>Tests should fail if you don't press &quot;Calculate&quot; on the page under test after you change the numbers!</p>
 
     <form><input id="startTests" type="button" value="Start tests"></form>
+  </body>
 ```
 
 File `testing\tests.js`: update it to:
@@ -729,8 +752,8 @@ function GetMainPageState(jazil) {
   return {
     'value1': value1,
     'value2': value2,
-    'shownResult': parseInt($(jazil.testDocument).find('#sumResult').val()),
-    'storedResult': jazil.testWindow.localStorage.getItem('sumResult'),
+    'shownResult': parseInt($(jazil.testDocument).find('#result').val()),
+    'storedResult': jazil.testWindow.localStorage.getItem('result'),
     'correctResult': value1 + value2
   }
 }

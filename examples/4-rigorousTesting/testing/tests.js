@@ -119,8 +119,8 @@ jazil.AddTestSet('module Summer', {
 
 jazil.AddTestSet('Main page tests', {
   'The main page should list the correct answer': function(jazil) {
-    let shownResult = $(jazil.testDocument).find('#sumResult').text()
+    let shownResult = parseInt($(jazil.testDocument).find('#result').text())
 
-    jazil.Assert(parseInt(shownResult), 5)
+    jazil.ShouldBe(shownResult, 5)
   }
 })

@@ -2,7 +2,7 @@ let options = {
   'accessObjectNames': ['Summer'],
   'resultElementSpec': '#testResult',
   'iframeElementSpec': '#testFrame',
-  'passColor': '#408000' // moss is a better green
+  'passColor': '#000080' // blue is a better green
 }
 let jazil = new Jazillionth('../main.html', options)
 
@@ -30,8 +30,8 @@ jazil.AddTestSet('Summer tests', {
 
 jazil.AddTestSet('Main page tests', {
   'The main page should list the correct answer': function(jazil) {
-    let shownResult = $(jazil.testDocument).find('#sumResult').text()
+    let shownResult = parseInt($(jazil.testDocument).find('#result').text())
 
-    jazil.Assert(parseInt(shownResult), 5)
+    jazil.ShouldBe(shownResult, 5)
   }
 })

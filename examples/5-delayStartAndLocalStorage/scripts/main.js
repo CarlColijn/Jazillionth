@@ -7,8 +7,8 @@ function Calculate() {
   summer.Add(value2)
   let result = summer.Result()
 
-  $('#sumResult').val(result)
-  localStorage.setItem('sumResult', result)
+  $('#result').val(result)
+  localStorage.setItem('result', result)
 }
 
 
