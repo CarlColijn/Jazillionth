@@ -959,3 +959,68 @@ let mainSet = jazil.AddTestSet(mainPage, 'Main page tests', {
   }
 })
 ```
+
+
+
+### Example #6 - ignore extra library functions in the error call stacks
+
+We've abstracted some repetitive testing stuff away by creating a testing library.  We can call this library when we need to test if Summer sums two values correctly, and it will call us back when the results don't pan out.
+
+This does mean that we will also see this library helper function on all error call stacks when Summer goes rogue.  We know however that the library is well-tested and OK, so we are not interested in seeing it reported.  We can ignore this library in all error call stacks by setting the Jazillionth option `IgnoreCallStackLinesWith` to `testLibrary.js`.
+
+We'll also show that this Jazillionth setting works by mucking up Summer.  When you uncomment this option, you'll see the library appears in the call stacks again.
+
+File `scripts/summer.js`: Ensure we break Summer by letting it start from 1 instead of 0:
+
+```js
+function Summer() {
+  this.finalized = false
+  this.sum = 1
+}
+```
+
+File `testing/tests.html`: add our library by using the following script includes:
+
+```html
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="../../../jazillionth.js"></script>
+    <script src="testLibrary.js"></script>
+    <script src="tests.js"></script>
+```
+
+File `testing/testLibrary`: create this file with the following content:
+
+```js
+function TestSummer(value1, value2, OnErrorHandler) {
+  let correctResult = value1 + value2
+
+  let summer = new Summer
+  summer.Add(value1)
+  summer.Add(value2)
+  let summerResult = summer.Result()
+
+  if (summerResult != correctResult)
+    OnErrorHandler(summerResult, correctResult)
+}
+```
+
+File `Testing/tests.js`: replace it with the following:
+
+```js
+let options = {
+  'IgnoreCallStackLinesWith': ['testLibrary.js']
+}
+let jazil = new Jazillionth(options)
+let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer'])
+
+
+jazil.AddTestSet(mainPage, 'Summer tests', {
+  'Summer should know 1 + 1': function(jazil) {
+    TestSummer(
+      1, 1, (summerResult, correctResult) => {
+        jazil.ShouldBe(summerResult, correctResult)
+      }
+    )
+  }
+})
+```
