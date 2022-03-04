@@ -191,7 +191,7 @@ Jazillionth.prototype.Initialize = function(options) {
   this.SetConfig(options, 'failColor', '#800000')
   this.SetConfig(options, 'textColor', '#ffffff')
 
-  this.SetConfig(options, 'showPassedTests', true)
+  this.SetConfig(options, 'showPassedTests', false)
 
   this.SetConfig(options, 'OnBeforePageTests', undefined)
   this.SetConfig(options, 'OnAfterPageTests', undefined)
@@ -204,7 +204,8 @@ Jazillionth.prototype.Initialize = function(options) {
   this.testPages = []
 
   this.resultElement = undefined
-  this.resultHeaderElement = undefined
+  this.resultStateElement = undefined
+  this.toggleDisplayModeElement = undefined
   this.resultTableElement = undefined
   this.iframeElement = undefined
 
@@ -217,6 +218,8 @@ Jazillionth.prototype.Initialize = function(options) {
 
 Jazillionth.prototype.RegisterReadyHandler = function() {
   $(document).ready(() => {
+    this.SetupStyles()
+
     this.AddResultListing()
 
     this.AddIFrame()
@@ -358,8 +361,7 @@ Jazillionth.prototype.RunSetTests = function(testPage, testSet) {
       testSet.tests[testName](this, testName, testSet, testPage)
 
       ++this.numPasses
-      if (this.options.showPassedTests)
-        this.AddTestResult(testName, undefined)
+      this.AddTestResult(testName, undefined)
     }
     catch (exception) {
       ++this.numFails
@@ -384,7 +386,7 @@ Jazillionth.prototype.OnSetTests = function() {
 
     let setPassed = this.RunSetTests(testPage, testSet)
 
-    this.SetResultColor(currentSetElement, setPassed)
+    this.SetResultStyle(currentSetElement, setPassed, true)
 
     if (this.options.OnAfterSetTests !== undefined)
       this.options.OnAfterSetTests(this, testPage, testSet, setPassed)
@@ -401,7 +403,7 @@ Jazillionth.prototype.OnSetTests = function() {
 
 
 Jazillionth.prototype.OnAfterPageTests = function() {
-  this.SetResultColor(this.currentPageElement, this.currentPagePassed)
+  this.SetResultStyle(this.currentPageElement, this.currentPagePassed, true)
 
   if (this.options.OnAfterPageTests !== undefined) {
     let testPage = this.GetCurrentPage()
@@ -443,12 +445,7 @@ Jazillionth.prototype.AddIFrame = function() {
     this.iframeElement = $(this.options.iframeElementSpec)
   else {
     this.iframeElement =
-      $('<iframe></iframe>').
-      css({
-        'width': '100%',
-        'height': '800px',
-        'border': '1px solid ' + this.options.textColor,
-      }).
+      $('<iframe id="jazilTestFrame"></iframe>').
       appendTo($('body'))
   }
 
@@ -464,33 +461,129 @@ Jazillionth.prototype.AddIFrame = function() {
 }
 
 
+Jazillionth.prototype.UpdatePassedStyle = function(showPassed) {
+  let passedDisplayMode = showPassed? 'inherit': 'none'
+
+  $('#jazilPassedStyles').
+    html(`
+      .jazilShowPassed {
+        display: ${passedDisplayMode};
+      }
+    `)
+}
+
+
+Jazillionth.prototype.SetupStyles = function() {
+  $('<style type="text/css"></style>').
+    html(`
+      #jazilTestFrame {
+        width: 100%;
+        height: 800px;
+        border: 1px solid ${this.options.textColor};
+      }
+
+      #jazilResult {
+        border: 1px solid ${this.options.textColor};
+        padding: 0.3em;
+        color: ${this.options.textColor};
+      }
+
+      #jazilResultHeader {
+      }
+
+      #jazilResultState {
+        font-size: 1.4em;
+      }
+
+      #jazilToggleStateDisplay {
+        margin-left: 1em;
+      }
+
+      #jazilResultTable {
+        border-collapse: collapse;
+        margin-top: 1em;
+        margin-left: 1em;
+      }
+
+      #jazilResultTable tr {
+        border: 1px solid ${this.options.textColor};
+        width: 100%;
+      }
+
+      .jazilPageResult td {
+        padding: 2px 4px 2px 0px;
+      }
+
+      .jazilPageResult td {
+        font-size: 1.3em;
+        padding-left: 0.2em;
+      }
+
+      .jazilSetResult td {
+        font-size: 1.2em;
+        padding-left: 1em;
+      }
+
+      .jazilTestResult td {
+        padding-left: 2em;
+      }
+
+      .jazilUnknown {
+        background-color: inherit;
+      }
+
+      .jazilPassed {
+        background-color: ${this.options.passColor};
+      }
+
+      .jazilFailed {
+        background-color: ${this.options.failColor};
+      }
+    `).
+    appendTo('head')
+
+  $('<style id="jazilPassedStyles" type="text/css"></style>').
+    appendTo('head')
+
+  this.UpdatePassedStyle(this.options.showPassedTests)
+}
+
+
 Jazillionth.prototype.AddResultListing = function() {
   let parentElement = $(this.options.resultElementSpec)
 
   this.resultElement =
-    $('<div></div>').
-    css({
-      'border': '1px solid ' + this.options.textColor,
-      'padding': '0.3em',
-      'color': this.options.textColor,
-      'margin-bottom': '1em'
-    }).
+    $('<div id="jazilResult"></div>').
     appendTo(parentElement)
 
-  this.resultHeaderElement =
-    $('<div></div>').
-    css({
-      'margin-bottom': '1em',
-      'font-size': '1.4em'
-    }).
+  let resultHeaderElement =
+    $('<div id="jazilResultHeader"></div>').
     appendTo(this.resultElement)
 
-  this.resultTableElement =
-    $('<table></table>').
-    css({
-      'border-collapse': 'collapse',
-      'border': '1px solid ' + this.options.textColor
+  this.resultStateElement =
+    $('<span id="jazilResultState"></span>').
+    appendTo(resultHeaderElement)
+
+  let setDisplayModeElementText = (showAll) => {
+    this.toggleDisplayModeElement.text(
+      this.showingPassedTests?
+      'Hide passed tests':
+      'Show all tests'
+    )
+  }
+  this.toggleDisplayModeElement =
+  $('<button id="jazilToggleStateDisplay"></button>').
+    on('click', () => {
+      this.showingPassedTests = !this.showingPassedTests
+      this.UpdatePassedStyle(this.showingPassedTests)
+      setDisplayModeElementText(this.showingPassedTests)
     }).
+    appendTo(resultHeaderElement)
+  this.showingPassedTests = this.options.showPassedTests
+  setDisplayModeElementText(this.showingPassedTests)
+
+  this.resultTableElement =
+    $('<table id="jazilResultTable"></table>').
     appendTo(this.resultElement)
 
   this.ShowTestState()
@@ -498,16 +591,9 @@ Jazillionth.prototype.AddResultListing = function() {
 
 
 Jazillionth.prototype.AddTestPageHeader = function(testPage) {
-  let rowElement = $('<tr></tr>')
-  rowElement.css({
-    'border': '1px solid ' + this.options.textColor
-  })
+  let rowElement = $('<tr class="jazilPageResult"></tr>')
 
   let rowElementContent = $('<td></td>')
-  rowElementContent.css({
-    'font-size': '1.3em',
-    'padding': '2px 4px'
-  })
   rowElementContent.text(testPage.name + ' (' + testPage.url + ')')
 
   rowElement.append(rowElementContent)
@@ -518,16 +604,9 @@ Jazillionth.prototype.AddTestPageHeader = function(testPage) {
 
 
 Jazillionth.prototype.AddTestSetHeader = function(testSet) {
-  let rowElement = $('<tr></tr>')
-  rowElement.css({
-    'border': '1px solid ' + this.options.textColor
-  })
+  let rowElement = $('<tr class="jazilSetResult"></tr>')
 
   let rowElementContent = $('<td></td>')
-  rowElementContent.css({
-    'font-size': '1.2em',
-    'padding': '2px 4px 2px 1em'
-  })
   rowElementContent.text(testSet.name)
 
   rowElement.append(rowElementContent)
@@ -540,16 +619,10 @@ Jazillionth.prototype.AddTestSetHeader = function(testSet) {
 Jazillionth.prototype.AddTestResult = function(name, error) {
   let passed = error === undefined
 
-  let rowElement = $('<tr></tr>')
-  this.SetResultColor(rowElement, passed)
-  rowElement.css({
-    'border': '1px solid ' + this.options.textColor
-  })
+  let rowElement = $('<tr class="jazilTestResult"></tr>')
+  this.SetResultStyle(rowElement, passed, true)
 
   let rowElementContent = $('<td></td>')
-  rowElementContent.css({
-    'padding': '2px 4px 2px 2em'
-  })
 
   if (passed)
     rowElementContent.text(name + ': passed')
@@ -570,10 +643,10 @@ Jazillionth.prototype.AddTestResult = function(name, error) {
 }
 
 
-Jazillionth.prototype.SetResultColor = function(element, passed) {
-  element.css({
-    'background-color': passed ? this.options.passColor : this.options.failColor
-  })
+Jazillionth.prototype.SetResultStyle = function(element, passed, addDisplayClass) {
+  element.addClass(passed? 'jazilPassed': 'jazilFailed')
+  if (addDisplayClass)
+    element.addClass(passed? 'jazilShowPassed': 'jazilShowFailed')
 }
 
 
@@ -584,15 +657,13 @@ Jazillionth.prototype.ClearPreviousResults = function() {
 
 Jazillionth.prototype.ShowTestState = function() {
   if (this.state === this.State.toStart) {
-    this.resultElement.css({
-      'background-color': 'inherit'
-    })
-    this.resultHeaderElement.text('Tests not started')
+    this.resultElement.addClass('jazilUnknown')
+    this.resultStateElement.text('Tests not started')
   }
   else {
-    this.SetResultColor(this.resultElement, this.numFails == 0)
+    this.SetResultStyle(this.resultElement, this.numFails == 0, false)
     let testingState = this.state === this.State.done ? 'done' : 'in progress';
-    this.resultHeaderElement.text('Tests ' + testingState + '; ' + this.numPasses + ' tests passed, ' + this.numFails + ' tests failed.')
+    this.resultStateElement.text('Tests ' + testingState + '; ' + this.numPasses + ' tests passed, ' + this.numFails + ' tests failed.')
   }
 }
 

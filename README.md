@@ -260,8 +260,8 @@ The complete list of all Jazillionth options is:
   The background color for failed tests.
 * `textColor`: css color code (default: `'#ffffff'`)<br>
   The color for text and borders.
-* `showPassedTests`: bool (default: `true`)<br>
-  Whether to also show the tests that passed in the result.
+* `showPassedTests`: bool (default: `false`)<br>
+  The test page has a button to toggle the visibility of all passed tests.  The `showPassedTests` option sets the initial state of this button.
 * `IgnoreCallStackLinesWith`: array of string (default: `jquery.com`)<br>
   If a call stack line from a failed test result contains a string from this list, that call stack line is not displayed.  You can use this to pass in extra library identifying strings to suppress library call stack entries (which would not add clarity to the test result).  No matter what you pass, `jazillionth.js` is always added for you to this list.  Do note that case sensitive string comparison is used!
 * `startAutomatically`: bool (default: `true`)<br>
