@@ -181,13 +181,13 @@ The following assertion functions can be used:
 * `jazil.Assert(condition, message)`<br>
   Asserts the given condition holds, failing with the given message if not.
 * `jazil.ShouldBe(value, expected, message)`<br>
-  Checks if the given value equals the expected value, failing with the given message if not.  Equality is checked using the normal `==` operator.  The message is augmented to show what value was given and what was expected.
+  Checks if the given value equals the expected value, failing with the given message if not.  Equality is checked using the safer strict `===` operator.  The message is augmented to show what value was given and what was expected.
 * `jazil.ShouldNotBe(value, expected, message)`<br>
   The opposite of `jazil.ShouldBe`.
-* `jazil.ShouldBeStrict(value, expected, message)`<br>
-  Identical to `jazil.ShouldBe` but uses a `===` strict equality comparison instead.
-* `jazil.ShouldNotBeStrict(value, expected, message)`<br>
-  The opposite of `jazil.ShouldBeStrict`.
+* `jazil.ShouldBeLoose(value, expected, message)`<br>
+  Identical to `jazil.ShouldBe` but uses the loose non-strict `==` equality comparison instead.
+* `jazil.ShouldNotBeLoose(value, expected, message)`<br>
+  The opposite of `jazil.ShouldBeLoose`.
 * `jazil.ShouldBeBetween(value, expectedLower, expectedHigher, message)`<br>
   Checks if the given value falls within the expected value range, failing with the given message if not.  Bounds checking is done using the `>=` and '<=' operators.  The message is augmented to show what value was given and what was expected.
 * `jazil.ShouldNotBeBetween(value, expectedLower, expectedHigher, message)`<br>
@@ -677,9 +677,15 @@ jazil.AddTestSet(mainPage, 'module Summer', {
     summer = new Summer
     summer.Add(0)
     summer.Add(0)
-    // use strict since we're dealing with 0 here and
-    // don't want undefined etc. to match too
-    jazil.ShouldBeStrict(summer.Result(), 0, '0 + 0')
+    jazil.ShouldBe(summer.Result(), 0, '0 + 0')
+  },
+
+  'Summer is properly initialized out of the gate': function(jazil) {
+    let summer = new Summer
+    jazil.ShouldBe(summer.Result(), 0, 'not properly 0')
+
+    summer = new Summer
+    jazil.ShouldNotBe(summer.Result(), undefined, 'not properly initialized')
   },
 
   'Order is irrelevant': function(jazil) {
@@ -940,7 +946,7 @@ function GetMainPageState(jazil) {
     'value1': value1,
     'value2': value2,
     'shownResult': parseInt($(jazil.testDocument).find('#result').val()),
-    'storedResult': jazil.testWindow.localStorage.getItem('result'),
+    'storedResult': parseInt(jazil.testWindow.localStorage.getItem('result')),
     'correctResult': value1 + value2
   }
 }

@@ -82,74 +82,62 @@ Jazillionth.prototype.Assert = function(condition, message) {
 
 
 Jazillionth.prototype.ShouldBe = function(value, expected, message) {
-  // Check for equality instead of inequality as we're being ask
-  // for, since these have subtle differences in certain situations.
-  if (value == expected)
+  if (value === expected)
     return
-  else {
-    if (message === undefined)
-      throw new Error('expected ' + expected + ', got ' + value)
-    else
-      throw new Error(message + '; expected ' + expected + ', got ' + value)
-  }
+  else if (message === undefined)
+    throw new Error('expected ' + expected + ', got ' + value)
+  else
+    throw new Error(message + '; expected ' + expected + ', got ' + value)
 }
 
 
 Jazillionth.prototype.ShouldNotBe = function(value, expected, message) {
-  // Check for inequality instead of equality as we're being ask
-  // for, since these have subtle differences in certain situations.
-  if (value != expected)
-    return
-  else {
-    if (message === undefined)
-      throw new Error('value is ' + expected)
-    else
-      throw new Error(message + '; value is ' + expected)
-  }
-}
-
-
-Jazillionth.prototype.ShouldBeStrict = function(value, expected, message) {
-  if (value === expected)
-    return
-  else {
-    if (message === undefined)
-      throw new Error('expected ' + expected + ', got ' + value)
-    else
-      throw new Error(message + '; expected ' + expected + ', got ' + value)
-  }
-}
-
-
-Jazillionth.prototype.ShouldNotBeStrict = function(value, expected, message) {
   if (value !== expected)
     return
-  else {
-    if (message === undefined)
-      throw new Error('value is ' + expected)
-    else
-      throw new Error(message + '; value is ' + expected)
-  }
+  else if (message === undefined)
+    throw new Error('value is ' + expected)
+  else
+    throw new Error(message + '; value is ' + expected)
+}
+
+
+Jazillionth.prototype.ShouldBeLoose = function(value, expected, message) {
+  if (value == expected)
+    return
+  else if (message === undefined)
+    throw new Error('expected ' + expected + ', got ' + value)
+  else
+    throw new Error(message + '; expected ' + expected + ', got ' + value)
+}
+
+
+Jazillionth.prototype.ShouldNotBeLoose = function(value, expected, message) {
+  if (value != expected)
+    return
+  else if (message === undefined)
+    throw new Error('value is ' + expected)
+  else
+    throw new Error(message + '; value is ' + expected)
 }
 
 
 Jazillionth.prototype.ShouldBeBetween = function(value, expectedLower, expectedHigher, message) {
-  if (value < expectedLower || value > expectedHigher) {
-    if (message === undefined)
-      throw new Error('expected between ' + expectedLower + ' and ' + expectedHigher + ', got ' + value)
-    else
-      throw new Error(message + '; expected between ' + expectedLower + ' and ' + expectedHigher + ', got ' + value)
-  }
+  if (value >= expectedLower && value <= expectedHigher)
+    return
+  else if (message === undefined)
+    throw new Error('expected between ' + expectedLower + ' and ' + expectedHigher + ', got ' + value)
+  else
+    throw new Error(message + '; expected between ' + expectedLower + ' and ' + expectedHigher + ', got ' + value)
 }
 
 
 Jazillionth.prototype.ShouldNotBeBetween = function(value, expectedLower, expectedHigher, message) {
-  if (value >= expectedLower && value <= expectedHigher) {
-    if (message === undefined)
-      throw new Error('expected outside ' + expectedLower + ' and ' + expectedHigher + ', got ' + value)
-    else
-      throw new Error(message + '; expected outside ' + expectedLower + ' and ' + expectedHigher + ', got ' + value)
-  }
+  if (value < expectedLower || value > expectedHigher)
+    return
+  else if (message === undefined)
+    throw new Error('expected outside ' + expectedLower + ' and ' + expectedHigher + ', got ' + value)
+  else
+    throw new Error(message + '; expected outside ' + expectedLower + ' and ' + expectedHigher + ', got ' + value)
 }
 
 

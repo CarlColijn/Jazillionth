@@ -55,9 +55,15 @@ jazil.AddTestSet(mainPage, 'module Summer', {
     summer = new Summer
     summer.Add(0)
     summer.Add(0)
-    // use strict since we're dealing with 0 here and
-    // don't want undefined etc. to match too
-    jazil.ShouldBeStrict(summer.Result(), 0, '0 + 0')
+    jazil.ShouldBe(summer.Result(), 0, '0 + 0')
+  },
+
+  'Summer is properly initialized out of the gate': function(jazil) {
+    let summer = new Summer
+    jazil.ShouldBe(summer.Result(), 0, 'not properly 0')
+
+    summer = new Summer
+    jazil.ShouldNotBe(summer.Result(), undefined, 'not properly initialized')
   },
 
   'Order is irrelevant': function(jazil) {

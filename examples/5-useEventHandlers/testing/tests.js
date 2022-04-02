@@ -85,7 +85,7 @@ function GetMainPageState(jazil) {
     'value1': value1,
     'value2': value2,
     'shownResult': parseInt($(jazil.testDocument).find('#result').val()),
-    'storedResult': jazil.testWindow.localStorage.getItem('result'),
+    'storedResult': parseInt(jazil.testWindow.localStorage.getItem('result')),
     'correctResult': value1 + value2
   }
 }

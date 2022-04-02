@@ -6,6 +6,6 @@ function TestSummer(value1, value2, OnErrorHandler) {
   summer.Add(value2)
   let summerResult = summer.Result()
 
-  if (summerResult != correctResult)
+  if (summerResult !== correctResult)
     OnErrorHandler(summerResult, correctResult)
 }
