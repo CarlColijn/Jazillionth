@@ -726,7 +726,7 @@ jazil.AddTestSet(mainPage, 'module Summer', {
     summer = new Summer
     summer.Add(30)
     summer.Add(50)
-    jazil.ShouldBeBetween(summer.Result(), 2, 10, 'big sum not correct')
+    jazil.ShouldBeBetween(summer.Result(), 20, 100, 'big sum not correct')
   },
 
   'All basic sums': function(jazil) {
