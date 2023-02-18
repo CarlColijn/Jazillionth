@@ -99,7 +99,7 @@ To add a page to test, call `AddPageToTest(name, url[, accessObjectNames])`;
 * `accessObjectNames`: array of string (optional)<br>
   A list of the names of the JavaScript objects to make available to your test scripts.
 
-`AddPageToTest` returns the created TestPage object to you.  You must use this to later register test sets for it.  You can also access it's properties wherever you encounter it in your callback functions and test functions.  These are:
+`AddPageToTest` returns the created TestPage object to you.  You must use this to later register test sets for it.  You can also access its properties wherever you encounter it in your callback functions and test functions.  These are:
 
 * `name`: string<br>
   The specified name.
@@ -189,7 +189,7 @@ The following assertion functions can be used:
 * `jazil.ShouldNotBeLoose(value, expected, message)`<br>
   The opposite of `jazil.ShouldBeLoose`.
 * `jazil.ShouldBeBetween(value, expectedLower, expectedHigher, message)`<br>
-  Checks if the given value falls within the expected value range, failing with the given message if not.  Bounds checking is done using the `>=` and '<=' operators.  The message is augmented to show what value was given and what was expected.
+  Checks if the given value falls within the expected value range, failing with the given message if not.  Bounds checking is done using the `>=` and `<=` operators.  The message is augmented to show what value was given and what was expected.
 * `jazil.ShouldNotBeBetween(value, expectedLower, expectedHigher, message)`<br>
   The opposite of `jazil.ShouldBeBetween`.
 
@@ -201,7 +201,7 @@ Note also that there is no opposite to `jazil.Fail`; if a test goes well, you do
 
 ## Accessing the page under test
 
-Since the page under test is loaded in a separate iframe, your testing scripts cannot easily access it's HTML content nor it's JavaScript functions and global variables, etc.  But Jazillionth will help out with this.
+Since the page under test is loaded in a separate iframe, your testing scripts cannot easily access its HTML content nor its JavaScript functions and global variables, etc.  But Jazillionth will help out with this.
 
 When adding a page to test you can tell Jazillionth to automatically make certain JavaScript objects available for direct use in your scripts.  Do this by specifying the `accessObjectNames` argument to `AddPageToTest`.  You should pass an array holding the names of all the JavaScript objects you want to access on that page.  Once that page has loaded, Jazillionth will try to access each one of these objects and make an alias to them under the test suite page's window.  After that these objects are accessible just as if they were declared in your own script.
 
@@ -230,28 +230,28 @@ However, when your test sets depend on user interaction, you can alter the test 
   When you set this option to `false`, Jazillionth will not start automatically when the test suite page has loaded.  If you want the tests to start at another time (for example after pressing a button on the test suite page or after waiting for some AJAX request to finish first), you can set this to `false` and explicitly call `StartTests()` on the Jazillionth object when you are ready to start the tests.
 * option `OnBeforePageTests`<br>
   A user-defined event handler to run before the test sets for each page under test have started.  By that time the page is fully loaded and ready, and Jazillionth has already accessed the page under test's details.  If you want to access additional content and functionality from the current page under test and perform some extra set-up before running your tests, you can do so in this event handler.<br>
-  It's signature should be `OnBeforePageTests(jazil, testPage)`.  `jazil` is the fully set-up Jazillionth object doing the tests, and `testPage` is the TestPage object returned by the original call to `AddPageToTest`.  You can return `true` to stop all tests in their tracks at this point; returning in any other way will make the tests continue.
+  Its signature should be `OnBeforePageTests(jazil, testPage)`.  `jazil` is the fully set-up Jazillionth object doing the tests, and `testPage` is the TestPage object returned by the original call to `AddPageToTest`.  You can return `true` to stop all tests in their tracks at this point; returning in any other way will make the tests continue.
 * option `OnAfterPageTests`<br>
-  A user-defined event handler to run after each page under test is tested.  It's signature should be `OnAfterPageTests(jazil, testPage, testedOK)`.  `jazil` is the fully set-up Jazillionth object doing the tests, `testPage` is the TestPage object returned by the original call to `AddPageToTest`, and `testedOK` is a boolean indicating if all tests ran OK for this page.
+  A user-defined event handler to run after each page under test is tested.  Its signature should be `OnAfterPageTests(jazil, testPage, testedOK)`.  `jazil` is the fully set-up Jazillionth object doing the tests, `testPage` is the TestPage object returned by the original call to `AddPageToTest`, and `testedOK` is a boolean indicating if all tests ran OK for this page.
 * option `OnBeforeSetTests`<br>
   A user-defined event handler to run before the tests for each test set on a page under test have started.  If you want to access additional content and functionality from the current page under test and perform some extra set-up before running your tests, you can do so in this event handler.<br>
-  It's signature should be `OnBeforeSetTests(jazil, testPage, testSet)`.  `jazil` is the fully set-up Jazillionth object doing the tests, `testPage` is the TestPage object returned by the original call to `AddPageToTest`, and `testSet` is the TestSet object returned by the original call to `AddTestSet`.  You can return `true` to stop all tests in their tracks at this point; returning in any other way will make the tests continue.
+  Its signature should be `OnBeforeSetTests(jazil, testPage, testSet)`.  `jazil` is the fully set-up Jazillionth object doing the tests, `testPage` is the TestPage object returned by the original call to `AddPageToTest`, and `testSet` is the TestSet object returned by the original call to `AddTestSet`.  You can return `true` to stop all tests in their tracks at this point; returning in any other way will make the tests continue.
 * option `OnAfterPageTests`<br>
-  A user-defined function to run after each test set on a page under test is tested.  It's signature should be `OnAfterSetTests(jazil, testPage, testSet, testedOK)`.  `jazil` is the fully set-up Jazillionth object doing the tests, `testPage` is the TestPage object returned by the original call to `AddPageToTest`, `testSet` is the TestSet object returned by the original call to `AddTestSet`, and `testedOK` is a boolean indicating if all tests ran OK for this test set.
+  A user-defined function to run after each test set on a page under test is tested.  Its signature should be `OnAfterSetTests(jazil, testPage, testSet, testedOK)`.  `jazil` is the fully set-up Jazillionth object doing the tests, `testPage` is the TestPage object returned by the original call to `AddPageToTest`, `testSet` is the TestSet object returned by the original call to `AddTestSet`, and `testedOK` is a boolean indicating if all tests ran OK for this test set.
 
-If you let Jazillionth pause it's testing, then you can continue the tests at a later time by calling `ContinueTests` on the Jazillionth object.  For a more finely controlled code execution flow you can pass an optional boolean argument to indicate you want a delayed continuation.  With delayed continuation the tests will only resume running after your current script is done.  (This is arranged via a setTimeout with a delay of zero.)
+If you let Jazillionth pause its testing, then you can continue the tests at a later time by calling `ContinueTests` on the Jazillionth object.  For a more finely controlled code execution flow you can pass an optional boolean argument to indicate you want a delayed continuation.  With delayed continuation the tests will only resume running after your current script is done.  (This is arranged via a setTimeout with a delay of zero.)
 
 
 
 <a name="tweaking"></a>
 ## Tweaking and advanced functionality
 
-The presentation of the test results and the exact working of Jazillionth can be changed.  To do so, pass in an extra 2nd 'options' key/value dictionary object when creating the Jazillionth object.  You do not have to specify all individual options; if one is missing, it's default value is used instead.
+The presentation of the test results and the exact working of Jazillionth can be changed.  To do so, pass in an extra 2nd 'options' key/value dictionary object when creating the Jazillionth object.  You do not have to specify all individual options; if one is missing, its default value is used instead.
 
 The complete list of all Jazillionth options is:
 
 * `resultElementSpec`: jQuery element selector (default: `undefined`)<br>
-  By default, Jazillionth will append a <div> element at the end of the test suite page's content and place the test results in there.  If you want the test results to appear somewhere else, specify the jQuery element selector for that location.  The receiving element will also get it's background color set to the resulting test outcome color.
+  By default, Jazillionth will append a <div> element at the end of the test suite page's content and place the test results in there.  If you want the test results to appear somewhere else, specify the jQuery element selector for that location.  The receiving element will also get its background color set to the resulting test outcome color.
 * `iframeElementSpec`: jQuery element selector (default: `undefined`)<br>
   By default, Jazillionth will append an <iframe> element at the end of the test suite page's content and load the page under test in there.  If you want to use your own iframe for this, specify the jQuery element selector for that iframe.
 * `passColor`: css color code (default: `'#008000'`)<br>
@@ -444,7 +444,7 @@ let jazil = new Jazillionth(options)
 
 The main page is now going to use a new sum, as well as show a complex multiplication!
 
-we have an extra class `Multiplier` to test, so together with the 'Summer' tests and the main page tests this is all getting over our head fast.  We'd better divide up our testing code into a configuration part and three testing set parts (one for each class plus one for the main page).  Each of these four parts gets its own JavaScript file.  We again adjust the base example, like so:
+we have an extra class `Multiplier` to test, so together with the `Summer` tests and the main page tests this is all getting over our head fast.  We'd better divide up our testing code into a configuration part and three testing set parts (one for each class plus one for the main page).  Each of these four parts gets its own JavaScript file.  We again adjust the base example, like so:
 
 File `scripts/multiplier.js`: a new file; give it the following content:
 
