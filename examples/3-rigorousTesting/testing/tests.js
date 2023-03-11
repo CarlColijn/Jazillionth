@@ -84,7 +84,7 @@ jazil.AddTestSet(mainPage, 'module Summer', {
     jazil.ShouldBe(summer1.Result(), summer2.Result(), 'add in a negative')
   },
 
-  'Result should close the summer': function(jazil) {
+  'Calling Result should close the summer': function(jazil) {
     let summer = new Summer
     jazil.Assert(summer.CanAdd(), 'new Summer not addable')
     summer.Add(3)
@@ -93,6 +93,23 @@ jazil.AddTestSet(mainPage, 'module Summer', {
     jazil.ShouldBe(summer.Result(), 7, 'sum not correct')
     if (summer.CanAdd())
       jazil.Fail('closed Summer still addable')
+  },
+
+  'Calling Result should inhibit further addition': function(jazil) {
+    let summer = new Summer
+    jazil.ShouldNotThrow(
+      function() {
+        summer.Add(3)
+      },
+      'adding to unclosed summer'
+    )
+    summer.Result()
+    jazil.ShouldThrow(
+      function() {
+        summer.Add(4)
+      },
+      'adding to closed summer'
+    )
   },
 
   'Estimating hard to predict sums': function(jazil) {

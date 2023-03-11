@@ -192,6 +192,10 @@ The following assertion functions can be used:
   Checks if the given value falls within the expected value range, failing with the given message if not.  Bounds checking is done using the `>=` and `<=` operators.  The message is augmented to show what value was given and what was expected.
 * `jazil.ShouldNotBeBetween(value, expectedLower, expectedHigher, message)`<br>
   The opposite of `jazil.ShouldBeBetween`.
+* `jazil.ShouldThrow(CodeToRun, message)`<br>
+  Tries to execute the given CodeToRun, checking if it throws an exception, failing with the given message if not.  The CodeToRun is executed like a function, and no arguments are passed (i.e.: `CodeToRun()`).  You can thus supply any lamdba or function object.
+* `jazil.ShouldNotThrow(CodeToRun, message)`<br>
+  The opposite of `jazil.ShouldThrow`.  The message is augmented with the thrown exception converted to text.
 
 Note that with all these assertion functions the message is optional.  Jazillionth will always show where the fail happened (file and line number), so if a test only has one single check the message is probably redundant (the test name and the details added by, for example, `ShouldBe` should say enough).  But if a test function calls more than one assertion function, the message can be used to easily pinpoint which assertion failed.
 
@@ -589,7 +593,7 @@ File `testing/tests.html`: this should now link to the following scripts.  Note 
 
 ### Example #3 - more rigorous testing
 
-Summer gets a little boost -- it now tracks whether it has been used!  So, let's check for that.  And we didn't really properly test `Summer` before, so let's make up for that too.  And what do you know: we made a mistake in our test, so one of 'em fails now.  We alter the base example in the following way:
+Summer gets a little boost -- it now tracks whether it has been used, and throws a nasty exception when using it the wrong way!  So, let's check for that.  And we didn't really properly test `Summer` before, so let's make up for that too.  And what do you know: we made a mistake in our test, so one of 'em fails now.  We alter the base example in the following way:
 
 File `scripts/summer.js`: replace it with the following code:
 
@@ -602,7 +606,9 @@ function Summer() {
 }
 
 Summer.prototype.Add = function(value) {
-  if (!this.finalized)
+  if (this.finalized)
+    throw 'Sorry, we\'re closed for today.'
+  else
     this.sum += value
 }
 
@@ -706,7 +712,7 @@ jazil.AddTestSet(mainPage, 'module Summer', {
     jazil.ShouldBe(summer1.Result(), summer2.Result(), 'add in a negative')
   },
 
-  'Result should close the summer': function(jazil) {
+  'Calling Result should close the summer': function(jazil) {
     let summer = new Summer
     jazil.Assert(summer.CanAdd(), 'new Summer not addable')
     summer.Add(3)
@@ -715,6 +721,23 @@ jazil.AddTestSet(mainPage, 'module Summer', {
     jazil.ShouldBe(summer.Result(), 7, 'sum not correct')
     if (summer.CanAdd())
       jazil.Fail('closed Summer still addable')
+  },
+
+  'Calling Result should inhibit further addition': function(jazil) {
+    let summer = new Summer
+    jazil.ShouldNotThrow(
+      function() {
+        summer.Add(3)
+      },
+      'adding to unclosed summer'
+    )
+    summer.Result()
+    jazil.ShouldThrow(
+      function() {
+        summer.Add(4)
+      },
+      'adding to closed summer'
+    )
   },
 
   'Estimating hard to predict sums': function(jazil) {

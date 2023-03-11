@@ -141,6 +141,38 @@ Jazillionth.prototype.ShouldNotBeBetween = function(value, expectedLower, expect
 }
 
 
+Jazillionth.prototype.ShouldThrow = function(CodeToRun, message) {
+  let threw = false
+
+  try {
+    CodeToRun()
+  }
+  catch (exception) {
+    threw = true
+  }
+
+  if (!threw) {
+    if (message === undefined)
+      throw new Error(message + '; nothing thrown')
+    else
+      throw new Error('nothing thrown')
+  }
+}
+
+
+Jazillionth.prototype.ShouldNotThrow = function(CodeToRun, message) {
+  try {
+    CodeToRun()
+  }
+  catch (exception) {
+    if (message === undefined)
+      throw new Error(message + '; threw ' + exception)
+    else
+      throw new Error('threw ' + exception)
+  }
+}
+
+
 
 
 /*

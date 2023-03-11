@@ -6,7 +6,9 @@ function Summer() {
 }
 
 Summer.prototype.Add = function(value) {
-  if (!this.finalized)
+  if (this.finalized)
+    throw 'Sorry, we\'re closed for today.'
+  else
     this.sum += value
 }
 
