@@ -291,7 +291,7 @@ If your test suite page is in a subfolder named 'testing' and named 'testSuite.h
 
 `http://localhost:8000/testing/testSuite.html`
 
-If you have Python 3 installed, then you can also use `testExamples.py` from the root of this repository.  This is a python script which automatically starts a web server serving the examples, and which opens all examples in your default browser.
+If you have Python 3 installed, then you can also use `testExamples.py` from the root of this repository.  This is a python script which automatically starts a web server serving the examples, and which opens all examples in your default browser.  It also instructs your browser to disable caching for all content served, so that you can more easily test changes to your files.
 
 
 

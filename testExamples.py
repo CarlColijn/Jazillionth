@@ -24,13 +24,25 @@ class OpenExamplePagesThread(threading.Thread):
       # 1-second delay; give the previous page open time to get
       # fully executed by the browser
       time.sleep(1)
-      webbrowser.open('http://localhost:{port}/examples/{folder}/testing/tests.html'.format(port=port, folder=exampleFolder.name), new=2)
+      exampleURL = f'http://localhost:{port}/examples/{exampleFolder.name}/testing/tests.html'
+      print(f'\n>>> Opening example in browser: {exampleURL}\n')
+      webbrowser.open_new_tab(exampleURL)
 
 
-testServerAddress = ('', port)
-testServer = socketserver.TCPServer(testServerAddress, http.server.SimpleHTTPRequestHandler)
+class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
+  def end_headers(self):
+    self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+    self.send_header('Pragma', 'no-cache')
+    self.send_header('Expires', '0')
 
-openPagesThread = OpenExamplePagesThread()
-openPagesThread.start()
+    super().end_headers()
 
-testServer.serve_forever()
+
+if __name__ == '__main__':
+  testServerAddress = ('', port)
+  with socketserver.TCPServer(testServerAddress, NoCacheRequestHandler) as testServer:
+    openPagesThread = OpenExamplePagesThread()
+    openPagesThread.start()
+
+    print(f'Serving at port {port}')
+    testServer.serve_forever()
