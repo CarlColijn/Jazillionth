@@ -9,9 +9,9 @@
 
 ## Core idea
 
-Jazillionth is a light-weight, non-intrusive, easy-to-use testing harness for automatically testing your JavaScript;
+Jazillionth is a lightweight, non-intrusive, easy-to-use testing harness for automatically testing your JavaScript;
 
-* **Light-weight**: Jazillionth comes bundled in a single JavaScript file.  It only depends on jQuery being accessible but has no other dependencies.
+* **Lightweight**: Jazillionth comes bundled in a single JavaScript file.  It only depends on jQuery being accessible but has no other dependencies.
 * **Non-intrusive**: you do not need to add anything to the pages and scripts you want to test.  Jazillionth wraps your pages and scripts, and all of your testing code lives in a test suite wrapper around your pages.
 * **Easy-to-use**: you only need to create a simple test suite page which links to jQuery and Jazillionth, set up a Jazillionth object on it, and register your pages and tests with this object.  Next, just open the test suite page in your browser, and all tests should run automatically.  Done!
 
@@ -31,7 +31,9 @@ Due to browser security measures (Same Origin policy), both the test suite page 
 
 Local files (opening files with the `file://` protocol) are not testable either.  However, see the chapter <a href="#setupSimpleServer">Testing without a dedicated web server</a> for instructions on how to overcome this one.
 
-And last (but certainly not least), both the test suite page as well as the pages under test running in the iframe have their own scripts.  But the test suite page's script should not run before the page under test's script has run.  Jazillionth seems to get this right, but I have so far not been able to get absolute guarantees that the way Jazillionth manages this is a sure-fire way to ascertain this behavior.  If Jazillionth's tests run before your page under test's scripts have run, please let me know!
+Last (but certainly not least), both the test suite page as well as the pages under test running in the iframe have their own scripts.  But the test suite page's script should not run before the page under test's script has run.  Jazillionth seems to get this right, but I have so far not been able to get absolute guarantees that the way Jazillionth manages this is a sure-fire way to ascertain this behavior.  If Jazillionth's tests run before your page under test's scripts have run, please let me know!
+
+If the above restrictions are a deal breaker in your situation, you can still use Jazillionth in in-line testing mode.  In that case you only need to add three link tags to your page's head section to link in jQuery, Jazillionth and your JavaScript test script.  This way an iframe is not necessary anymore which relaxes all security restraints mentioned above.  You should then be able to run your tests anywhere and anyhow you like, while still only minimally altering the page to test.
 
 
 
@@ -45,7 +47,15 @@ In this document all Jazillionth object instances are named `jazil` for consiste
 
 ## Creating the test suite page
 
-Jazillionth doesn't require much from the test suite page.  The bare minimum needed on that page is as follows, in the given order:
+You can run Jazillionth in three ways;
+
+1. from a page wrapping your (external) pages under tests,
+2. in-line from within the page under test, and
+3. a mix of the above.
+
+Option 1. allows you to keep your testing code totally separate from the page under test.  This way the page under test can remain free of testing code, so that you can be confident that what you test can be put into production as-is.  In some circumstances this is unfortunately not possible, but then you can always use option 2.
+
+Jazillionth doesn't require much to get going.  The bare minimum that is needed on either the test suite page or the page under test is the following, in the given order:
 
 1. link to a recent-ish version of jQuery,
 2. link to Jazillionth,
@@ -53,18 +63,20 @@ Jazillionth doesn't require much from the test suite page.  The bare minimum nee
 4. create (and optionally configure) a Jazillionth object, and
 5. tell your Jazillionth object what tests to perform on which pages.
 
-By default, Jazillionth doesn't need anything else regarding the test suite page's content.  In the simplest use case it will:
+By default, Jazillionth doesn't need anything else.  In the simplest use case it will:
 
 * wait for the test suite page to be ready,
-* attach an iframe to the test suite page,
+* prepare the test suite page:
+  * attach the test log element to the end of the page,
+  * attach an iframe to the end of the page when testing external pages.
 * for all pages under test:
-  * load the next page under test in that iframe,
+  * load the page under test in that iframe if it's an external page,
   * wait for that page to fully load,
   * run all tests for that page.
-* show the test results at the top of the test suite page, and
-* depending on the overall test outcome, set the entire test suite page body background color to either the 'pass' or 'fail' color.
+* show the test results in the test log, and
+* depending on the overall test outcome, set the test log background color to either the 'pass' or 'fail' color.
 
-If you want to add extra content to the test suite page you are free to do so.  You can add an iframe to load the page under test into and tell Jazillionth to use that.  You can also tell Jazillionth where to place the test result, directing it to an existing HTML element instead.  And the used colors are tweakable too.  And you can add pre and post test handlers to really tweak the test flow, pausing the tests where needed.  See the chapter <a href="#tweaking">Tweaking and advanced functionality</a> for more details.
+If you want to add extra content to the test suite page you are free to do so.  You can add your own iframe to load the page under test into and tell Jazillionth to use that.  You can also tell Jazillionth where to place the test log, directing it to an existing HTML element instead.  And the used colors are tweakable too.  And you can add pre and post test handlers to really tweak the test flow, pausing the tests where needed.  See the chapter <a href="#tweaking">Tweaking and advanced functionality</a> for more details.
 
 
 
@@ -90,14 +102,14 @@ Jazillionth allows you to test multiple pages in one go, each with its own sets 
   * 0 or more test sets (TestSet objects)
     * 0 or more test functions (dictionary of test functions)
 
-To add a page to test, call `AddPageToTest(name, url[, accessObjectNames])`;
+To add a page to test, call either `AddPageToTest(name, url[, accessObjectNames])` for external pages, or `AddPageToTest(name)` for the current page;
 
 * `name`: string<br>
-  A reference name for use in the test result listing.
-* `url`: string<br>
-  The page's URL.
+  A reference name for use in the test log.
+* `url`: string (optional)<br>
+  The page's URL for external pages, or do not specify an URL to test the current page in-line.
 * `accessObjectNames`: array of string (optional)<br>
-  A list of the names of the JavaScript objects to make available to your test scripts.
+  A list of the names of the JavaScript objects to make available to your test scripts.  You cannot specify object names when testing the current page in-line, since your scripts can access everything in it as-is anyway.
 
 `AddPageToTest` returns the created TestPage object to you.  You must use this to later register test sets for it.  You can also access its properties wherever you encounter it in your callback functions and test functions.  These are:
 
@@ -113,10 +125,16 @@ To add a page to test, call `AddPageToTest(name, url[, accessObjectNames])`;
 Example:
 
 ```js
-let mainPage = jazil.AddPageToTest('Main page', '/path/to/main-page-to-test.html')
+let mainPage = jazil.AddPageToTest('External page', '/path/to/main-page-to-test.html')
 ```
 
-With this TestPage variable `mainPage` in hand, you are ready to add one or more named test sets to it.  When listing the test results, these test sets form logical sections in the result listing.  This allows you to, for example, define a different test set per tested module in that page to make the test result listing line up nicely with your internal code structure for an easier overview.
+or
+
+```js
+let mainPage = jazil.AddPageToTest('Current page')
+```
+
+With this TestPage variable `mainPage` in hand, you are ready to add one or more named test sets to it.  These test sets form their own sections in the test log.  This allows you to, for example, define a different test set per tested module in that page to make the test log line up nicely with your internal code structure for an easier overview.
 
 Test sets themselves are a combination of a name and a simple dictionary holding the test functions.  In this dictionary, each key is the name of the individual test function, and each value is the function performing that test.  You register test sets with Jazillionth by calling `AddTestSet(testPage, name, testFunctions)`;
 
@@ -193,7 +211,7 @@ The following assertion functions can be used:
 * `jazil.ShouldNotBeBetween(value, expectedLower, expectedHigher, message)`<br>
   The opposite of `jazil.ShouldBeBetween`.
 * `jazil.ShouldThrow(CodeToRun, message)`<br>
-  Tries to execute the given CodeToRun, checking if it throws an exception, failing with the given message if not.  The CodeToRun is executed like a function, and no arguments are passed (i.e.: `CodeToRun()`).  You can thus supply any lamdba or function object.
+  Tries to execute the given CodeToRun, checking if it throws an exception, failing with the given message if not.  The CodeToRun is executed like a function, and no arguments are passed (i.e.: `CodeToRun()`).  You can thus supply any lambda or function object.
 * `jazil.ShouldNotThrow(CodeToRun, message)`<br>
   The opposite of `jazil.ShouldThrow`.  The message is augmented with the thrown exception converted to text.
 
@@ -205,19 +223,35 @@ Note also that there is no opposite to `jazil.Fail`; if a test goes well, you do
 
 ## Accessing the page under test
 
-Since the page under test is loaded in a separate iframe, your testing scripts cannot easily access its HTML content nor its JavaScript functions and global variables, etc.  But Jazillionth will help out with this.
+Since external pages under test are loaded in a separate iframe, your testing scripts cannot easily access its HTML content nor its JavaScript functions and global variables, etc.  But Jazillionth will help out with this.
 
-When adding a page to test you can tell Jazillionth to automatically make certain JavaScript objects available for direct use in your scripts.  Do this by specifying the `accessObjectNames` argument to `AddPageToTest`.  You should pass an array holding the names of all the JavaScript objects you want to access on that page.  Once that page has loaded, Jazillionth will try to access each one of these objects and make an alias to them under the test suite page's window.  After that these objects are accessible just as if they were declared in your own script.
+When adding an external page to test you can tell Jazillionth to automatically make certain JavaScript objects available for direct use in your scripts.  Do this by specifying the `accessObjectNames` argument to `AddPageToTest`.  You should pass an array holding the names of all the JavaScript objects you want to access on that page.  Once that page has loaded, Jazillionth will try to access each one of these objects and make an alias to them under the test suite page's window.  After that these objects are accessible just as if they were declared in your own script.<br>
+When you test the current page in-line, no JavaScript objects are made available, since your script should be able to access them by itself anyway.  You can still pass a list of names in the `accessObjectNames` argument when you pass `undefined` as the URL argument, but these names will just be ignored.  This way you can more easily switch between external and in-line testing.
 
-A caveat here is that Jazillionth can only access JavaScript objects that are registered on the page under test's window object.  Functions are automatically added there, as well as global variables declared with `var`.  But global variables declared with `let` are not accessible.  If you want to access `let` declared variables in your testing scripts, either change them to `var` variables, or add an accessor function for them.
+A caveat here is that Jazillionth can only access JavaScript objects that are registered on the page under test's window object ('Object Environment Record' vs. 'Declarative Environment Record').  Functions are automatically added there, as well as global variables declared with `var`.  But global variables declared with `let` or `const`, as well as classes defined with `class` are not.  If you want to access `let` or `const` declared variables in your testing scripts, either change them to `var` variables, or add an accessor function for them.  If you want to access classes, you can bind them to `var` variables instead.  Another solution is to test the page in-line instead.
 
-Jazillionth also makes two other objects accessible: the current page under test's `window` and `document` objects.  You can find these under `jazil.testDocument` and `jazil.testWindow` respectively.  You can use these to access, for example, the page under test's body content, the rest of the page under test's global JavaScript variables and functions, as well as the page's `location`, `history` and `localstorage` objects.
+Example:
+
+```js
+// Cannot be accessed.
+let myLet = 0
+const myConst = 0
+class MyDirectClass {}
+
+// Can be accessed.
+function MyFunction() {}
+var myVar = 0
+var MyIndirectClass = class {}
+```
+
+Jazillionth also makes two other objects accessible: the current page under test's `window` and `document` objects.  You can find these under `jazil.testWindow` and `jazil.testDocument` respectively.  You can use these to access, for example, the page under test's body content, the rest of the page under test's global JavaScript variables and functions, as well as the page's `location`, `history` and `localstorage` objects.<br>
+When testing the current page in-line these properties are set to the regular `window` and `window.document` objects, so that your test scripts can be kept agnostic of what type of page is being tested.
 
 
 
 ## Running the tests
 
-After you created the test suite page, just open it in your browser.  Once the test suite page is fully loaded, Jazillionth will load all pages under test one by one.  For each page under test, once it is fully loaded, all tests in all registered test sets for that page will be executed automatically.  When all pages have been tested, Jazillionth will show the outcome of each test.  It will also adjust the test suite page's background color to the overall test outcome, whereby if only one test fails, the overall test outcome is a failure too.
+After you created the test suite page, just open it in your browser.  Once the test suite page is fully loaded, Jazillionth will load all pages under test one by one.  For each page under test, once it is fully loaded, all tests in all registered test sets for that page will be executed automatically.  When all pages have been tested, Jazillionth will show the outcome of each test in the test log.  It will also adjust the test log's background color to the overall test outcome, whereby if only one test fails, the overall test outcome is a failure too.
 
 And just press Refresh whenever you want to run the tests again!
 
@@ -255,7 +289,7 @@ The presentation of the test results and the exact working of Jazillionth can be
 The complete list of all Jazillionth options is:
 
 * `resultElementSpec`: jQuery element selector (default: `undefined`)<br>
-  By default, Jazillionth will append a <div> element at the end of the test suite page's content and place the test results in there.  If you want the test results to appear somewhere else, specify the jQuery element selector for that location.  The receiving element will also get its background color set to the resulting test outcome color.
+  By default, Jazillionth will append a <div> element at the end of the test suite page's content and place the test result logs in there.  If you want the test log to appear somewhere else, specify the jQuery element selector for that location.  The receiving element will also get its background color set to the resulting test outcome color.
 * `iframeElementSpec`: jQuery element selector (default: `undefined`)<br>
   By default, Jazillionth will append an <iframe> element at the end of the test suite page's content and load the page under test in there.  If you want to use your own iframe for this, specify the jQuery element selector for that iframe.
 * `passColor`: css color code (default: `'#008000'`)<br>
@@ -267,7 +301,7 @@ The complete list of all Jazillionth options is:
 * `showPassedTests`: bool (default: `false`)<br>
   The test page has a button to toggle the visibility of all passed tests.  The `showPassedTests` option sets the initial state of this button.
 * `IgnoreCallStackLinesWith`: array of string (default: `jquery.com`)<br>
-  If a call stack line from a failed test result contains a string from this list, that call stack line is not displayed.  You can use this to pass in extra library identifying strings to suppress library call stack entries (which would not add clarity to the test result).  No matter what you pass, `jazillionth.js` is always added for you to this list.  Do note that case sensitive string comparison is used!
+  If a call stack line from a failed test result contains a string from this list, that call stack line is not displayed.  You can use this to pass in extra library identifying strings to suppress library call stack entries (which would not add clarity to the test log).  No matter what you pass, `jazillionth.js` is always added for you to this list.  Do note that case sensitive string comparison is used!
 * `startAutomatically`: bool (default: `true`)<br>
   Whether to start all tests automatically when the test suite page is fully loaded.  See the chapter <a href="advancedTestFlow">Intervening in the test flow</a> for more details.
 * `OnBeforePageTests`: custom event handler (default: undefined)<br>
@@ -1052,4 +1086,29 @@ jazil.AddTestSet(mainPage, 'Library files not in call stack', {
     )
   }
 })
+```
+
+
+
+### Example #7 - testing the main page in-line
+
+We want to test the main page itself in-line.  This way we can test it right from disk as well without starting a server.  For that we make the following alterations to the base example:
+
+File `main.html`: add extra script tags to include Jazillionth and the test scripts directly.  Replace the script includes with:
+
+```html
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="scripts/summer.js"></script>
+    <script src="scripts/main.js"></script>
+    <script src="../../jazillionth.js"></script>
+    <script src="testing/tests.js"></script>
+```
+
+File `testing/tests.html`: remove this file; it's not needed anymore.
+
+File `testing/tests.js`: replace the page adding section with:
+
+```js
+let jazil = new Jazillionth()
+let mainPage = jazil.AddPageToTest('main')
 ```

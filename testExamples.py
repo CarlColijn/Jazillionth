@@ -24,7 +24,11 @@ class OpenExamplePagesThread(threading.Thread):
       # 1-second delay; give the previous page open time to get
       # fully executed by the browser
       time.sleep(1)
-      exampleURL = f'http://localhost:{port}/examples/{exampleFolder.name}/testing/tests.html'
+      htmlFilePath = os.path.join(exampleFolder, 'testing', 'tests.html')
+      if (not os.path.isfile(htmlFilePath)):
+        htmlFilePath = os.path.join(exampleFolder, 'main.html')
+      urlSaferelHTMLFilePath = os.path.relpath(htmlFilePath, ourPath).replace('\\', '/')
+      exampleURL = f'http://localhost:{port}/{urlSaferelHTMLFilePath}'
       print(f'\n>>> Opening example in browser: {exampleURL}\n')
       webbrowser.open_new_tab(exampleURL)
 

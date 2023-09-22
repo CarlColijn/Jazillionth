@@ -11,12 +11,14 @@ function Jazillionth(options) {
 
 
 Jazillionth.prototype.AddPageToTest = function(name, url, accessObjectNames) {
+  let isExternalPage = url !== undefined;
   let testPage = {
     'nr': this.testPages.length,
     'name': name,
-    'url': url,
-    'accessObjectNames': accessObjectNames,
-    'testSets': []
+    'url': isExternalPage ? url : 'this page',
+    'accessObjectNames': isExternalPage ? accessObjectNames : undefined,
+    'testSets': [],
+    'isExternalPage': isExternalPage
   }
   this.testPages.push(testPage)
 
@@ -220,8 +222,6 @@ Jazillionth.prototype.RegisterReadyHandler = function() {
 
     this.AddResultListing()
 
-    this.AddIFrame()
-
     if (this.options.startAutomatically)
       this.StartTests()
   })
@@ -239,17 +239,23 @@ Jazillionth.prototype.ClearAccessedObjects = function(ourWindow) {
 
 
 Jazillionth.prototype.AccessObjects = function(ourWindow, testPage) {
-  this.testWindow = this.iframeElement[0].contentWindow
-  this.testDocument = this.testWindow.document || this.iframeElement[0].contentDocument
+  if (!testPage.isExternalPage) {
+    this.testWindow = window
+    this.testDocument = window.document
+  }
+  else {
+    this.testWindow = this.iframeElement[0].contentWindow
+    this.testDocument = this.testWindow.document || this.iframeElement[0].contentDocument
 
-  this.ClearAccessedObjects(ourWindow)
+    this.ClearAccessedObjects(ourWindow)
 
-  this.accessedObjectNames = testPage.accessObjectNames
+    this.accessedObjectNames = testPage.accessObjectNames
 
-  if (testPage.accessObjectNames !== undefined) {
-    for (let objectNameNr in testPage.accessObjectNames) {
-      let objectName = testPage.accessObjectNames[objectNameNr]
-      ourWindow[objectName] = this.testWindow[objectName]
+    if (testPage.accessObjectNames !== undefined) {
+      for (let objectNameNr in testPage.accessObjectNames) {
+        let objectName = testPage.accessObjectNames[objectNameNr]
+        ourWindow[objectName] = this.testWindow[objectName]
+      }
     }
   }
 }
@@ -273,12 +279,16 @@ Jazillionth.prototype.GetCurrentSet = function(testPage) {
 }
 
 
-Jazillionth.prototype.OnIFrameLoaded = function() {
-  this.AccessObjects(window, this.GetCurrentPage())
+Jazillionth.prototype.OnPageReady = function() {
+  let testPage = this.GetCurrentPage()
+
+  this.AccessObjects(window, testPage)
 
   this.state = this.State.beforePageTests
 
-  if (this.testsRunning)
+  if (testPage.isExternalPage && this.testsRunning)
+    // We're running async from the iframe now; we need
+    // to explicitly continue.
     this.ContinueTests()
 }
 
@@ -346,9 +356,18 @@ Jazillionth.prototype.RunTestLoop = function() {
 
 Jazillionth.prototype.OnBeforePageLoad = function() {
   let testPage = this.GetCurrentPage()
-  this.iframeElement.attr("src", testPage.url)
+  if (testPage.isExternalPage) {
+    this.EnsureIFrameAdded()
 
-  return false // we'll continue from the iframe's load event
+    this.iframeElement.attr("src", testPage.url)
+
+    return false // we'll continue from the iframe's load event
+  }
+  else {
+    this.OnPageReady()
+
+    return true // we're ready to continue
+  }
 }
 
 
@@ -449,29 +468,31 @@ Jazillionth.prototype.OnDone = function() {
 */
 
 
-Jazillionth.prototype.AddIFrame = function() {
-  // We start listening to the iframe's load first, and only
-  // then load in the test page.  Done any other way we're
-  // more than likely we miss the iframe's load event, which
-  // is the correct time to start the tests.
+Jazillionth.prototype.EnsureIFrameAdded = function() {
+  if (this.iframeElement === undefined) {
+    // We start listening to the iframe's load first, and only
+    // then load in the test page.  Done any other way we're
+    // more than likely we miss the iframe's load event, which
+    // is the correct time to start the tests.
 
-  if (this.options.iframeElementSpec !== undefined)
-    this.iframeElement = $(this.options.iframeElementSpec)
-  else {
-    this.iframeElement =
-      $('<iframe id="jazilTestFrame"></iframe>').
-      appendTo($('body'))
+    if (this.options.iframeElementSpec !== undefined)
+      this.iframeElement = $(this.options.iframeElementSpec)
+    else {
+      this.iframeElement =
+        $('<iframe id="jazilTestFrame"></iframe>').
+        appendTo($('body'))
+    }
+
+    // We're using a combination of onload and setTimeout;
+    // - onload to wait for the iframe to be available, and
+    // - setTimeout to run async so our tests hopefully run after
+    //   any other scheduled javascript has ran in the iframe.
+    this.iframeElement.on('load', () => {
+      setTimeout(() => {
+        this.OnPageReady()
+      }, 0)
+    })
   }
-
-  // We're using a combination of onload and setTimeout;
-  // - onload to wait for the iframe to be available, and
-  // - setTimeout to run our tests only after any scheduled
-  //   javascript has ran in the iframe, hopefully.
-  this.iframeElement.on('load', () => {
-    setTimeout(() => {
-      this.OnIFrameLoaded()
-    }, 0)
-  })
 }
 
 
