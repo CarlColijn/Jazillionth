@@ -254,7 +254,7 @@ Jazillionth.prototype.AccessObjects = function(ourWindow, testPage) {
     if (testPage.accessObjectNames !== undefined) {
       for (let objectNameNr in testPage.accessObjectNames) {
         let objectName = testPage.accessObjectNames[objectNameNr]
-        ourWindow[objectName] = this.testWindow[objectName]
+        ourWindow[objectName] = this.testWindow.eval(objectName)
       }
     }
   }

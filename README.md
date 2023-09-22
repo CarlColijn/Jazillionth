@@ -225,27 +225,11 @@ Note also that there is no opposite to `jazil.Fail`; if a test goes well, you do
 
 Since external pages under test are loaded in a separate iframe, your testing scripts cannot easily access its HTML content nor its JavaScript functions and global variables, etc.  But Jazillionth will help out with this.
 
-When adding an external page to test you can tell Jazillionth to automatically make certain JavaScript objects available for direct use in your scripts.  Do this by specifying the `accessObjectNames` argument to `AddPageToTest`.  You should pass an array holding the names of all the JavaScript objects you want to access on that page.  Once that page has loaded, Jazillionth will try to access each one of these objects and make an alias to them under the test suite page's window.  After that these objects are accessible just as if they were declared in your own script.<br>
+When adding an external page to test you can tell Jazillionth to automatically make certain JavaScript objects available for direct use in your scripts.  Do this by specifying the `accessObjectNames` argument to `AddPageToTest`.  You should pass an array holding the names of all the JavaScript objects you want to access on that page.  Once that page has loaded, Jazillionth will try to access each one of these objects and make an alias to them under the test suite page's window, so that they will also be globally available.  After that these objects are accessible just as if they were declared in your own script.  The only restriction here is that literal values (numbers, string etc.) get copied, so you cannot modify the originals in the page under test.<br>
 When you test the current page in-line, no JavaScript objects are made available, since your script should be able to access them by itself anyway.  You can still pass a list of names in the `accessObjectNames` argument when you pass `undefined` as the URL argument, but these names will just be ignored.  This way you can more easily switch between external and in-line testing.
 
-A caveat here is that Jazillionth can only access JavaScript objects that are registered on the page under test's window object ('Object Environment Record' vs. 'Declarative Environment Record').  Functions are automatically added there, as well as global variables declared with `var`.  But global variables declared with `let` or `const`, as well as classes defined with `class` are not.  If you want to access `let` or `const` declared variables in your testing scripts, either change them to `var` variables, or add an accessor function for them.  If you want to access classes, you can bind them to `var` variables instead.  Another solution is to test the page in-line instead.
-
-Example:
-
-```js
-// Cannot be accessed.
-let myLet = 0
-const myConst = 0
-class MyDirectClass {}
-
-// Can be accessed.
-function MyFunction() {}
-var myVar = 0
-var MyIndirectClass = class {}
-```
-
-Jazillionth also makes two other objects accessible: the current page under test's `window` and `document` objects.  You can find these under `jazil.testWindow` and `jazil.testDocument` respectively.  You can use these to access, for example, the page under test's body content, the rest of the page under test's global JavaScript variables and functions, as well as the page's `location`, `history` and `localstorage` objects.<br>
-When testing the current page in-line these properties are set to the regular `window` and `window.document` objects, so that your test scripts can be kept agnostic of what type of page is being tested.
+Jazillionth also makes two other objects accessible: the current page under test's `window` and `document` objects.  You can find these under `jazil.testWindow` and `jazil.testDocument` respectively.  You can use these to access, for example, the page under test's body content, the rest of the page under test's global JavaScript `var` variables and functions, as well as the page's `location`, `history` and `localstorage` objects.<br>
+When testing the current page in-line these properties are set to the page's own `window` and `window.document` objects, so that your test scripts can be kept agnostic of what type of page is being tested.
 
 
 
