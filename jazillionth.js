@@ -68,10 +68,7 @@ Jazillionth.prototype.ContinueTests = function(delayed) {
 
 
 Jazillionth.prototype.Fail = function(message) {
-  if (message === undefined)
-    throw new Error
-  else
-    throw new Error(message)
+  this.HandleFeedback(message)
 }
 
 
@@ -84,60 +81,48 @@ Jazillionth.prototype.Assert = function(condition, message) {
 Jazillionth.prototype.ShouldBe = function(value, expected, message) {
   if (value === expected)
     return
-  else if (message === undefined)
-    throw new Error('expected ' + expected + ', got ' + value)
   else
-    throw new Error(message + '; expected ' + expected + ', got ' + value)
+    this.HandleFeedback(message, `expected ${expected}, got ${value}`)
 }
 
 
 Jazillionth.prototype.ShouldNotBe = function(value, expected, message) {
   if (value !== expected)
     return
-  else if (message === undefined)
-    throw new Error('value is ' + expected)
   else
-    throw new Error(message + '; value is ' + expected)
+    this.HandleFeedback(message, `value is ${expected}`)
 }
 
 
 Jazillionth.prototype.ShouldBeLoose = function(value, expected, message) {
   if (value == expected)
     return
-  else if (message === undefined)
-    throw new Error('expected ' + expected + ', got ' + value)
   else
-    throw new Error(message + '; expected ' + expected + ', got ' + value)
+    this.HandleFeedback(message, `expected ${expected}, got ${value}`)
 }
 
 
 Jazillionth.prototype.ShouldNotBeLoose = function(value, expected, message) {
   if (value != expected)
     return
-  else if (message === undefined)
-    throw new Error('value is ' + expected)
   else
-    throw new Error(message + '; value is ' + expected)
+    this.HandleFeedback(message, `value is ${expected}`)
 }
 
 
 Jazillionth.prototype.ShouldBeBetween = function(value, expectedLower, expectedHigher, message) {
   if (value >= expectedLower && value <= expectedHigher)
     return
-  else if (message === undefined)
-    throw new Error('expected between ' + expectedLower + ' and ' + expectedHigher + ', got ' + value)
   else
-    throw new Error(message + '; expected between ' + expectedLower + ' and ' + expectedHigher + ', got ' + value)
+    this.HandleFeedback(message, `expected between ${expectedLower} and ${expectedHigher}, got ${value}`)
 }
 
 
 Jazillionth.prototype.ShouldNotBeBetween = function(value, expectedLower, expectedHigher, message) {
   if (value < expectedLower || value > expectedHigher)
     return
-  else if (message === undefined)
-    throw new Error('expected outside ' + expectedLower + ' and ' + expectedHigher + ', got ' + value)
   else
-    throw new Error(message + '; expected outside ' + expectedLower + ' and ' + expectedHigher + ', got ' + value)
+    this.HandleFeedback(message, `expected outside ${expectedLower} and ${expectedHigher}, got ${value}`)
 }
 
 
@@ -151,12 +136,8 @@ Jazillionth.prototype.ShouldThrow = function(CodeToRun, message) {
     threw = true
   }
 
-  if (!threw) {
-    if (message === undefined)
-      throw new Error(message + '; nothing thrown')
-    else
-      throw new Error('nothing thrown')
-  }
+  if (!threw)
+    this.HandleFeedback(message, 'nothing thrown')
 }
 
 
@@ -165,10 +146,7 @@ Jazillionth.prototype.ShouldNotThrow = function(CodeToRun, message) {
     CodeToRun()
   }
   catch (exception) {
-    if (message === undefined)
-      throw new Error(message + '; threw ' + exception)
-    else
-      throw new Error('threw ' + exception)
+    this.HandleFeedback(message, `threw ${exception}`)
   }
 }
 
@@ -207,8 +185,8 @@ Jazillionth.prototype.Initialize = function(options) {
   this.SetConfig(options, 'resultElementSpec', 'body')
   this.SetConfig(options, 'iframeElementSpec', undefined)
 
-  this.SetConfig(options, 'passColor', '#008000')
-  this.SetConfig(options, 'failColor', '#800000')
+  this.SetConfig(options, 'passColor', '#006000')
+  this.SetConfig(options, 'failColor', '#600000')
   this.SetConfig(options, 'textColor', '#ffffff')
 
   this.SetConfig(options, 'showPassedTests', false)
@@ -318,6 +296,22 @@ Jazillionth.prototype.ResetTestState = function() {
   this.currentSetNr = 0
   this.state = this.State.toStart
   this.testsRunning = false
+}
+
+
+Jazillionth.prototype.HandleFeedback = function(message, result) {
+  if (message === undefined) {
+    if (result === undefined)
+      throw new Error()
+    else
+      throw new Error(result)
+  }
+  else {
+    if (result === undefined)
+      throw new Error(message)
+    else
+      throw new Error(`${message}; ${result}`)
+  }
 }
 
 
@@ -530,6 +524,10 @@ Jazillionth.prototype.SetupStyles = function() {
         width: 100%;
       }
 
+      #jazilResultTable tr {
+        color: ${this.options.textColor};
+      }
+
       .jazilPageResult td {
         padding: 2px 4px 2px 0px;
       }
@@ -614,7 +612,7 @@ Jazillionth.prototype.AddTestPageHeader = function(testPage) {
   let rowElement = $('<tr class="jazilPageResult"></tr>')
 
   let rowElementContent = $('<td></td>')
-  rowElementContent.text(testPage.name + ' (' + testPage.url + ')')
+  rowElementContent.text(`${testPage.name} (${testPage.url})`)
 
   rowElement.append(rowElementContent)
   this.resultTableElement.append(rowElement)
@@ -645,9 +643,9 @@ Jazillionth.prototype.AddTestResult = function(name, error) {
   let rowElementContent = $('<td></td>')
 
   if (passed)
-    rowElementContent.text(name + ': passed')
+    rowElementContent.text(`${name}: passed`)
   else {
-    rowElementContent.text(name + ': failed')
+    rowElementContent.text(`${name}: failed`)
 
     $('<div></div>').
     text(error).
@@ -683,7 +681,8 @@ Jazillionth.prototype.ShowTestState = function() {
   else {
     this.SetResultStyle(this.resultElement, this.numFails == 0, false)
     let testingState = this.state === this.State.done ? 'done' : 'in progress';
-    this.resultStateElement.text('Tests ' + testingState + '; ' + this.numPasses + ' tests passed, ' + this.numFails + ' tests failed.')
+    let TestCount = (count) => `${count} test${count === 1 ? '' : 's'}`
+    this.resultStateElement.text(`Tests ${testingState}; ${TestCount(this.numPasses)} passed, ${TestCount(this.numFails)} failed.`)
   }
 }
 
