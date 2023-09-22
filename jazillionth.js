@@ -17,7 +17,7 @@ class Jazillionth {
       'nr': this.#testPages.length,
       'name': name,
       'url': isExternalPage ? url : 'this page',
-      'accessObjectNames': isExternalPage ? accessObjectNames : undefined,
+      'accessObjectNames': accessObjectNames,
       'testSets': [],
       'isExternalPage': isExternalPage
     }
