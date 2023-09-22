@@ -11,13 +11,14 @@ class Jazillionth {
   }
 
 
-  AddPageToTest(name, url, accessObjectNames) {
+  AddPageToTest(name, url, accessObjectNames, trackObjectNames) {
     let isExternalPage = url !== undefined;
     let testPage = {
       'nr': this.#testPages.length,
       'name': name,
       'url': isExternalPage ? url : 'this page',
       'accessObjectNames': accessObjectNames,
+      'trackObjectNames': trackObjectNames,
       'testSets': [],
       'isExternalPage': isExternalPage
     }
@@ -193,7 +194,7 @@ class Jazillionth {
   #testWindow = undefined
   #testDocument = undefined
 
-  #accessedObjectNames = undefined
+  #mappedObjectNames = []
 
   #state = this.#State.toStart
   #numPasses = 0
@@ -264,35 +265,47 @@ class Jazillionth {
   }
 
 
-  #ClearAccessedObjects(ourWindow) {
-    if (this.#accessedObjectNames !== undefined) {
-      for (let objectNameNr in this.#accessedObjectNames) {
-        let objectName = this.#accessedObjectNames[objectNameNr]
-        delete ourWindow[objectName]
+  #UnmapObjects() {
+    for (let objectNameNr in this.#mappedObjectNames) {
+      let objectName = this.#mappedObjectNames[objectNameNr]
+      delete window[objectName]
+    }
+
+    this.#mappedObjectNames = []
+  }
+
+
+  #ObjectType = {
+    tracked: {},
+    untracked: {}
+  }
+  #MapObjectsOfType(objectNames, objectType) {
+    if (objectNames !== undefined) {
+      for (let objectNameNr in objectNames) {
+        let objectName = objectNames[objectNameNr]
+        this.#mappedObjectNames.push(objectName)
+        if (objectType === this.#ObjectType.tracked)
+          window[objectName] = this.#testWindow.eval(`Function("return ${objectName}")`)
+        else
+          window[objectName] = this.#testWindow.eval(objectName)
       }
     }
   }
 
 
-  #AccessObjects(ourWindow, testPage) {
-    if (!testPage.isExternalPage) {
-      this.#testWindow = window
-      this.#testDocument = window.document
-    }
-    else {
+  #MapObjects(testPage) {
+    this.#UnmapObjects()
+
+    if (testPage.isExternalPage) {
       this.#testWindow = this.#iframeElement[0].contentWindow
       this.#testDocument = this.#testWindow.document || this.#iframeElement[0].contentDocument
 
-      this.#ClearAccessedObjects(ourWindow)
-
-      this.#accessedObjectNames = testPage.accessObjectNames
-
-      if (testPage.accessObjectNames !== undefined) {
-        for (let objectNameNr in testPage.accessObjectNames) {
-          let objectName = testPage.accessObjectNames[objectNameNr]
-          ourWindow[objectName] = this.#testWindow.eval(objectName)
-        }
-      }
+      this.#MapObjectsOfType(testPage.accessObjectNames, this.#ObjectType.untracked)
+      this.#MapObjectsOfType(testPage.trackObjectNames, this.#ObjectType.tracked)
+    }
+    else {
+      this.#testWindow = window
+      this.#testDocument = window.document
     }
   }
 
@@ -318,7 +331,7 @@ class Jazillionth {
   #OnPageReady() {
     let testPage = this.#GetCurrentPage()
 
-    this.#AccessObjects(window, testPage)
+    this.#MapObjects(testPage)
 
     this.#state = this.#State.beforePageTests
 
@@ -330,7 +343,7 @@ class Jazillionth {
 
 
   #ResetTestState() {
-    this.#accessedObjectNames = undefined
+    this.#mappedObjectNames = []
 
     this.#numPasses = 0
     this.#numFails = 0

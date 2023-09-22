@@ -94,6 +94,16 @@ and Jazillionth is up-and-running, waiting for pages and tests to be registered.
 
 
 
+## Testing JavaScript objects
+
+When you test your JavaScript variables, classes, functions, etc., you want to access them in the simplest way possible.  Your scripts can already access everything they need as-is if you test the current page in-line.  But Jazillionth loads external pages in an iframe, and then all those JavaScript objects are tucked away there too.  Jazillionth helps with this by letting you specify a list of the names of objects you want to access, and then makes them accessible for you like they were living inside your own script.
+
+To get a bit technical: when making these objects accessible to your script, Jazillionth takes a reference to these global objects and puts that reference in your script's global scope.  For classes and functions e.g., this can be done as-is.  For objects that do not get re-assigned anymore once created, this also works.  But dynamic variables that store literal values (like numbers and strings) cannot be referenced like this.  Jazillionth can only copy their value instead, which means you get a snapshot of the value they had when Jazillionth started up, and live updates are not visible to your script.
+
+To solve this, Jazillionth employs a workaround for these types of objects: you can also pass a separate list of the names of objects to track.  When doing so, these objects will be made accessible to your scripts via a like-named accessor function instead of a like-named variable.  Do note though that you then need to treat that variable as a function to get at its value; so instead of using `let copy = myValue` in your test script, you'd have to use `let copy = myValue()`.  A small price to pay.
+
+
+
 ## Registering and defining tests
 
 Jazillionth allows you to test multiple pages in one go, each with its own sets of tests.  First you add a page to test, then you add test set(s) to that page to test; these test sets hold the individual test functions themselves.  The object hierarchy thus becomes:
@@ -102,16 +112,20 @@ Jazillionth allows you to test multiple pages in one go, each with its own sets 
   * 0 or more test sets (TestSet objects)
     * 0 or more test functions (dictionary of test functions)
 
-To add a page to test, call either `AddPageToTest(name, url[, accessObjectNames])` for external pages, or `AddPageToTest(name)` for the current page;
+To add a page to test, call either `AddPageToTest(name, url, accessObjectNames, trackObjectNames)` for external pages, or `AddPageToTest(name)` for the current page;
 
 * `name`: string<br>
   A reference name for use in the test log.
 * `url`: string (optional)<br>
   The page's URL for external pages, or do not specify an URL to test the current page in-line.
 * `accessObjectNames`: array of string (optional)<br>
-  A list of the names of the JavaScript objects to make available to your test scripts.  You cannot specify object names when testing the current page in-line, since your scripts can access everything in it as-is anyway.
+  A list of the names of the JavaScript objects to make available to your test scripts by reference.
+* `trackObjectNames`: array of string (optional)<br>
+  Identical in use to `accessObjectNames`, but for tracked objects.  Jazillionth will make accessor functions for these objects for you.
 
-`AddPageToTest` returns the created TestPage object to you.  You must use this to later register test sets for it.  You can also access its properties wherever you encounter it in your callback functions and test functions.  These are:
+`AddPageToTest` returns the created TestPage object to you.  You must use this to later register test sets for it.  Note that Jazillionth ignores the `accessObjectNames` and `trackObjectNames` when testing the current page in-line, since your scripts can access these objects as-is anyway, and accessor functions for `trackObjectNames` would even give name conflicts with the objects they track.
+
+You can also access its properties wherever you encounter it in your callback functions and test functions.  These are:
 
 * `name`: string<br>
   The specified name.
@@ -119,6 +133,8 @@ To add a page to test, call either `AddPageToTest(name, url[, accessObjectNames]
   The specified URL.
 * `accessObjectNames`: array of string, or `undefined`<br>
   The specified names to access.  If you passed no names, this property will be set to `undefined`.
+* `trackObjectNames`: array of string, or `undefined`<br>
+  The specified names to track.  If you passed no names, this property will be set to `undefined`.
 * `testSets`: array of TestSet objects<br>
   All test sets you registered for this page under test (see below).
 
@@ -225,7 +241,8 @@ Note also that there is no opposite to `jazil.Fail`; if a test goes well, you do
 
 Since external pages under test are loaded in a separate iframe, your testing scripts cannot easily access its HTML content nor its JavaScript functions and global variables, etc.  But Jazillionth will help out with this.
 
-When adding an external page to test you can tell Jazillionth to automatically make certain JavaScript objects available for direct use in your scripts.  Do this by specifying the `accessObjectNames` argument to `AddPageToTest`.  You should pass an array holding the names of all the JavaScript objects you want to access on that page.  Once that page has loaded, Jazillionth will try to access each one of these objects and make an alias to them under the test suite page's window, so that they will also be globally available.  After that these objects are accessible just as if they were declared in your own script.  The only restriction here is that literal values (numbers, string etc.) get copied, so you cannot modify the originals in the page under test.<br>
+When adding an external page to test you can tell Jazillionth to automatically make certain JavaScript objects available for direct use in your scripts.  Do this by specifying the `accessObjectNames` argument to `AddPageToTest`.  You should pass an array holding the names of all the JavaScript objects you want to access on that page.  Once that page has loaded, Jazillionth will try to access each one of these objects and make an alias to them under the test suite page's window, so that they will also be globally available.  After that these objects are accessible just as if they were declared in your own script.<br>
+The only restriction here is that global variables which are set to literal values (numbers, string etc.) get copied.  This means you cannot modify the originals in the page under test, nor do the values your script sees change while your tests run.  A similar thing applies when a global variable holds an object but is assigned a different object while the tests run.  For these objects you can prepend their name with an '!' in the `accessObjectNames` list, like `!myVariable`.  Jazillionth will then add an accessor function under that variable's name, instead of a copy of the value.  When you want to access the value you then only need to treat the variable as a function, like `myVariable()`.<br>
 When you test the current page in-line, no JavaScript objects are made available, since your script should be able to access them by itself anyway.  You can still pass a list of names in the `accessObjectNames` argument when you pass `undefined` as the URL argument, but these names will just be ignored.  This way you can more easily switch between external and in-line testing.
 
 Jazillionth also makes two other objects accessible: the current page under test's `window` and `document` objects.  You can find these under `jazil.testWindow` and `jazil.testDocument` respectively.  You can use these to access, for example, the page under test's body content, the rest of the page under test's global JavaScript `var` variables and functions, as well as the page's `location`, `history` and `localstorage` objects.<br>
@@ -1095,3 +1112,82 @@ File `testing/tests.js`: replace the page adding section with:
 let jazil = new Jazillionth()
 let mainPage = jazil.AddPageToTest('main')
 ```
+
+
+
+### Example #8 - tracking global literal value changes
+
+We want to let Summer keep a grand total of all the values ever summed.  We store this in a global variable.  However, changes to global numbers can only be tracked if we explicitly ask for it by using the `trackObjectNames` list when adding a page to test.  To test this (and to also test that untracked variables are not tracked) we make the following alterations to the base example:
+
+File `scripts/summer.js`: replace its content with:
+
+```js
+let g_trackedTotalSummed = 0
+let g_untrackedTotalSummed = 0
+
+
+class Summer {
+  #finalized = false
+  #sum = 0
+
+  Add(value) {
+    if (!this.#finalized) {
+      this.#sum += value
+      g_trackedTotalSummed += value
+      g_untrackedTotalSummed += value
+    }
+  }
+
+  get result() {
+    this.#finalized = true
+    return this.#sum
+  }
+
+  get canAdd() {
+    return !this.#finalized
+  }
+}
+```
+
+
+File `testing/tests.js`: replace the file's content with:
+
+```js
+let jazil = new Jazillionth()
+let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer', 'g_untrackedTotalSummed'], ['g_trackedTotalSummed'])
+
+
+jazil.AddTestSet(mainPage, 'Summer tests', {
+  'Summer should know 1 + 1': function(jazil) {
+    let summer = new Summer
+
+    summer.Add(1)
+    summer.Add(1)
+    jazil.ShouldBe(summer.result, 2)
+  },
+  'Tracked total sum should update correctly': function(jazil) {
+    let summer = new Summer
+
+    let oldTotalSummed = g_trackedTotalSummed()
+    summer.Add(3)
+    summer.Add(5)
+    jazil.ShouldBe(g_trackedTotalSummed(), oldTotalSummed + 3 + 5, 'tracked total sum is not updated correctly')
+  },
+  'Untracked total sum should not update correctly': function(jazil) {
+    let summer = new Summer
+
+    let oldTotalSummed = g_untrackedTotalSummed
+    summer.Add(4)
+    summer.Add(2)
+    jazil.ShouldNotBe(g_untrackedTotalSummed, oldTotalSummed + 4 + 2, 'untracked total sum is updated correctly')
+  }
+})
+
+
+jazil.AddTestSet(mainPage, 'Main page tests', {
+  'The main page should list the correct answer': function(jazil) {
+    let shownResult = parseInt($(jazil.testDocument).find('#result').text())
+
+    jazil.ShouldBe(shownResult, 5)
+  }
+})```
