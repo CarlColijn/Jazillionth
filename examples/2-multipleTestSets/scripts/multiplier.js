@@ -1,18 +1,18 @@
-function Multiplier() {
-  this.finalized = false
-  this.result = 1
-}
+class Multiplier {
+  #finalized = false
+  #product = 1
 
-Multiplier.prototype.Add = function(value) {
-  if (!this.finalized)
-    this.result *= value
-}
+  Add(value) {
+    if (!this.#finalized)
+      this.#product *= value
+  }
 
-Multiplier.prototype.Result = function() {
-  this.finalized = true
-  return this.result
-}
+  get result() {
+    this.#finalized = true
+    return this.#product
+  }
 
-Multiplier.prototype.CanAdd = function() {
-  return !this.finalized
+  get canAdd() {
+    return !this.#finalized
+  }
 }

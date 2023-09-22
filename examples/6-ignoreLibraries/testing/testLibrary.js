@@ -4,7 +4,7 @@ function TestSummer(value1, value2, OnErrorHandler) {
   let summer = new Summer
   summer.Add(value1)
   summer.Add(value2)
-  let summerResult = summer.Result()
+  let summerResult = summer.result
 
   if (summerResult !== correctResult)
     OnErrorHandler(summerResult, correctResult)

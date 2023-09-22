@@ -1,18 +1,18 @@
-function Summer() {
-  this.finalized = false
-  this.sum = 0
-}
+class Summer {
+  #finalized = false
+  #sum = 0
 
-Summer.prototype.Add = function(value) {
-  if (!this.finalized)
-    this.sum += value
-}
+  Add(value) {
+    if (!this.#finalized)
+      this.#sum += value
+  }
 
-Summer.prototype.Result = function() {
-  this.finalized = true
-  return this.sum
-}
+  get result() {
+    this.#finalized = true
+    return this.#sum
+  }
 
-Summer.prototype.CanAdd = function() {
-  return !this.finalized
+  get CanAdd() {
+    return !this.#finalized
+  }
 }

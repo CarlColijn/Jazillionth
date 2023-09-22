@@ -5,7 +5,7 @@ function Calculate() {
   let summer = new Summer
   summer.Add(value1)
   summer.Add(value2)
-  let result = summer.Result()
+  let result = summer.result
 
   $('#result').val(result)
   localStorage.setItem('result', result)

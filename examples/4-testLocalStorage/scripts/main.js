@@ -9,7 +9,7 @@ $(document).ready(function() {
   let summer = new Summer
   summer.Add(value1)
   summer.Add(value2)
-  let result = summer.Result()
+  let result = summer.result
 
   $('#value2').text(value2)
   localStorage.setItem('value2', value2)

@@ -3,11 +3,11 @@ $(document).ready(function() {
   summer.Add(1)
   summer.Add(2)
   summer.Add(4)
-  $('#sumResult').text(summer.Result())
+  $('#sumResult').text(summer.result)
 
   let multiplier = new Multiplier
   multiplier.Add(2)
   multiplier.Add(3)
   multiplier.Add(5)
-  $('#multiplyResult').text(multiplier.Result())
+  $('#multiplyResult').text(multiplier.result)
 })
