@@ -233,9 +233,9 @@ class Jazillionth {
     this.#SetConfig(options, 'OnBeforeSetTests', undefined)
     this.#SetConfig(options, 'OnAfterSetTests', undefined)
 
-    this.#SetConfig(options, 'IgnoreCallStackLinesWith', [])
-    this.#options.IgnoreCallStackLinesWith.push('jquery.com')
-    this.#options.IgnoreCallStackLinesWith.push('jazillionth.js')
+    this.#SetConfig(options, 'ignoreCallStackLinesWith', [])
+    this.#options.ignoreCallStackLinesWith.push('jquery.com')
+    this.#options.ignoreCallStackLinesWith.push('jazillionth.js')
 
     this.#testPages = []
 
@@ -752,8 +752,8 @@ class Jazillionth {
 
       let relevantLines = allLines.filter((line) => {
         // We're using indexOf instead of includes to keep IE11 on board.
-        for (let textNr in this.#options.IgnoreCallStackLinesWith)
-          if (line.indexOf(this.#options.IgnoreCallStackLinesWith[textNr]) !== -1)
+        for (let textNr in this.#options.ignoreCallStackLinesWith)
+          if (line.indexOf(this.#options.ignoreCallStackLinesWith[textNr]) !== -1)
             return false
         return true
       })

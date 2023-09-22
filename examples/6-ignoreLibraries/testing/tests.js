@@ -1,5 +1,5 @@
 let options = {
-  'IgnoreCallStackLinesWith': ['testLibrary.js']
+  'ignoreCallStackLinesWith': ['testLibrary.js']
 }
 let jazil = new Jazillionth(options)
 let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer'])

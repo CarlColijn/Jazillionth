@@ -284,7 +284,7 @@ The complete list of all Jazillionth options is:
   The color for text and borders.
 * `showPassedTests`: bool (default: `false`)<br>
   The test page has a button to toggle the visibility of all passed tests.  The `showPassedTests` option sets the initial state of this button.
-* `IgnoreCallStackLinesWith`: array of string (default: `jquery.com`)<br>
+* `ignoreCallStackLinesWith`: array of string (default: `jquery.com`)<br>
   If a call stack line from a failed test result contains a string from this list, that call stack line is not displayed.  You can use this to pass in extra library identifying strings to suppress library call stack entries (which would not add clarity to the test log).  No matter what you pass, `jazillionth.js` is always added for you to this list.  Do note that case sensitive string comparison is used!
 * `startAutomatically`: bool (default: `true`)<br>
   Whether to start all tests automatically when the test suite page is fully loaded.  See the chapter <a href="advancedTestFlow">Intervening in the test flow</a> for more details.
@@ -1013,7 +1013,7 @@ let mainSet = jazil.AddTestSet(mainPage, 'Main page tests', {
 
 We've abstracted some repetitive testing stuff away by creating a testing library.  We can call this library when we need to test if Summer sums two values correctly, and it will call us back when the results don't pan out.
 
-This does mean that we will also see this library helper function on all error call stacks when Summer goes rogue.  We know however that the library is well-tested and OK, so we are not interested in seeing it reported.  We can ignore this library in all error call stacks by setting the Jazillionth option `IgnoreCallStackLinesWith` to `testLibrary.js`.
+This does mean that we will also see this library helper function on all error call stacks when Summer goes rogue.  We know however that the library is well-tested and OK, so we are not interested in seeing it reported.  We can ignore this library in all error call stacks by setting the Jazillionth option `ignoreCallStackLinesWith` to `testLibrary.js`.
 
 We'll also show that this Jazillionth setting works by mucking up Summer.  When you uncomment this option, you'll see the library appears in the call stacks again.
 
@@ -1054,7 +1054,7 @@ File `Testing/tests.js`: replace it with the following:
 
 ```js
 let options = {
-  'IgnoreCallStackLinesWith': ['testLibrary.js']
+  'ignoreCallStackLinesWith': ['testLibrary.js']
 }
 let jazil = new Jazillionth(options)
 let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer'])
