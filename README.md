@@ -235,6 +235,8 @@ Note that with all these assertion functions the message is optional.  Jazillion
 
 Note also that there is no opposite to `jazil.Fail`; if a test goes well, you do not have to report anything.
 
+When your test function implicitly or explicitly throws an exception itself, Jazillionth will catch that too and mark the test as 'failed'.  If you know that the code your unit tests could throw an exception, you thus do not have to wrap that call in a try/catch block to prevent the tests breaking.  However, depending on the type of exception used, you will or will not get a proper call stack trace in that failed test's logs.  When your code uses the standard `Error` exception type (or any other type derived from it), a call stack trace is added.  All other exception types (e.g., `throw`ing raw strings and such) will most likely not get a call stack trace.  Do note though that while support for getting the call stack trace is common in all major browsers, it is not standardized (yet) and might thus not always work.
+
 
 
 ## Accessing the page under test
@@ -1034,6 +1036,8 @@ This does mean that we will also see this library helper function on all error c
 
 We'll also show that this Jazillionth setting works by mucking up Summer.  When you uncomment this option, you'll see the library appears in the call stacks again.
 
+Finally we'll see what happens when your testing code (or libraries used by your testing code) uses exceptions themselves.  `Error` exceptions (or derivatives thereof) provide a nice call stack, while all other exceptions will not.
+
 File `scripts/summer.js`: Ensure we break Summer by letting it start from 1 instead of 0:
 
 ```js
@@ -1077,6 +1081,18 @@ let jazil = new Jazillionth(options)
 let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer'])
 
 
+class CustomException extends Error {
+  constructor(message) {
+    super(message)
+  }
+}
+
+
+function ThisOneThrows(message) {
+  throw Error(message)
+}
+
+
 jazil.AddTestSet(mainPage, 'Library files not in call stack', {
   'Failing a test to force a call stack': function(jazil) {
     TestSummer(
@@ -1084,6 +1100,22 @@ jazil.AddTestSet(mainPage, 'Library files not in call stack', {
         jazil.ShouldBe(summerResult, correctResult, 'testLibrary.js should not show in the call stack')
       }
     )
+  },
+
+  'Throwing a standard exception ourselves with a call stack': function(jazil) {
+    throw Error('Throwing \'Error\' shows a call stack trace')
+  },
+
+  'Throwing a custom exception ourselves with a call stack': function(jazil) {
+    throw CustomException('Throwing \'CustomException\' shows a call stack trace')
+  },
+
+  'Throwing an exception ourselves without a call stack': function(jazil) {
+    throw 'Throwing a string doesn\'t show a call stack trace'
+  },
+
+  'Called code can also throw exceptions': function(jazil) {
+    ThisOneThrows('Called code is also present on the call stack trace')
   }
 })
 ```
