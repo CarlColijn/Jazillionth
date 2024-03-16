@@ -1,3 +1,7 @@
+class JazillionthSkippedTest {
+}
+
+
 class Jazillionth {
   /*
     Initialization
@@ -79,6 +83,11 @@ class Jazillionth {
 
     A message is optional in all cases.
   */
+
+
+  SkipTest() {
+    throw new JazillionthSkippedTest()
+  }
 
 
   Fail(message) {
@@ -450,10 +459,12 @@ class Jazillionth {
         this.#AddTestResult(testName, undefined)
       }
       catch (exception) {
-        ++this.#numFails
-        setPassed = false
-        this.#currentPagePassed = false
-        this.#AddTestResult(testName, exception)
+        if (!(exception instanceof JazillionthSkippedTest)) {
+          ++this.#numFails
+          setPassed = false
+          this.#currentPagePassed = false
+          this.#AddTestResult(testName, exception)
+        }
       }
     }
 

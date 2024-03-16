@@ -230,6 +230,8 @@ The following assertion functions can be used:
   Tries to execute the given CodeToRun, checking if it throws an exception, failing with the given message if not.  The CodeToRun is executed like a function, and no arguments are passed (i.e.: `CodeToRun()`).  You can thus supply any lambda or function object.
 * `jazil.ShouldNotThrow(CodeToRun, message)`<br>
   The opposite of `jazil.ShouldThrow`.  The message is augmented with the thrown exception converted to text.
+* `jazil.SkipTest()`<br>
+  Skips the (remainder of the) current test, also in the test results.  Note that all code above this call will still be executed, so if that code throws an exception or calls a failing `jazil.ShouldBe` or such, the test will still be counted and failed.
 
 Note that with all these assertion functions the message is optional.  Jazillionth will always show where the fail happened (file and line number), so if a test only has one single check the message is probably redundant (the test name and the details added by, for example, `ShouldBe` should say enough).  But if a test function calls more than one assertion function, the message can be used to easily pinpoint which assertion failed.
 
@@ -1222,4 +1224,87 @@ jazil.AddTestSet(mainPage, 'Main page tests', {
 
     jazil.ShouldBe(shownResult, 5)
   }
-})```
+})
+```
+
+
+
+### Example #9 - skipping certain tests
+
+We're going to do create two very related test sets, each containing a few tests.  We're going to add 1 to a number, add a number to 1, subtract 1 from a number, and subtract a number from 1.  We're going to do this for two even and two odd numbers.  This should result in 16 tests in total.
+
+However, we're quite sure we were taught in school that it isn't allowed to subtract with an odd number...  We're therefore going to properly skip those particular tests.  These will then also not end up in the test log; in the end only 12 tests will be ran and counted.
+
+For that we make the following alterations to the base example:
+
+File `testing/tests.js`: replace the entire content with:
+
+```js
+let options = {
+  'showPassedTests': true // to show which tests ran
+}
+let jazil = new Jazillionth(options)
+let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer'])
+
+
+function IsEven(x) {
+  return (x % 2) === 0
+}
+
+
+function AddSpecificTestSet(x) {
+  jazil.AddTestSet(mainPage, `Summer tests - sum for x=${x}`, {
+    'Summer should know x+1': function(jazil) {
+      let summer = new Summer
+
+      summer.Add(x)
+      summer.Add(1)
+      jazil.ShouldBe(summer.result, x+1)
+    },
+
+    'Summer should know 1+x': function(jazil) {
+      let summer = new Summer
+
+      summer.Add(1)
+      summer.Add(x)
+      jazil.ShouldBe(summer.result, 1+x)
+    },
+
+    'Summer should know x-1 if x is even': function(jazil) {
+      if (!IsEven(x))
+        jazil.SkipTest()
+
+      // This is now safe to do; the test has already been skipped
+      // when x is odd.
+      jazil.Assert(IsEven(x))
+
+      let summer = new Summer
+
+      summer.Add(x)
+      summer.Add(-1)
+      jazil.ShouldBe(summer.result, x-1)
+    },
+
+    'Summer should know 1-x if x is even': function(jazil) {
+      if (!IsEven(x))
+        jazil.SkipTest()
+
+      // This is now safe to do; the test has already been skipped
+      // when x is odd.
+      jazil.Assert(IsEven(x))
+
+      let summer = new Summer
+
+      summer.Add(1)
+      summer.Add(-x)
+      jazil.ShouldBe(summer.result, 1-x)
+    }
+  })
+}
+
+
+AddSpecificTestSet(2)
+AddSpecificTestSet(3)
+AddSpecificTestSet(4)
+AddSpecificTestSet(5)
+```
