@@ -215,7 +215,7 @@ The following assertion functions can be used:
 * `jazil.Assert(condition, message)`<br>
   Asserts the given condition holds, failing with the given message if not.
 * `jazil.ShouldBe(value, expected, message)`<br>
-  Checks if the given value equals the expected value, failing with the given message if not.  Equality is checked using the safer strict `===` operator.  The message is augmented to show what value was given and what was expected.
+  Checks if the given value equals the expected value, failing with the given message if not.  Equality is checked using the safer strict `===` operator.  The message is augmented to show what value was given and what was expected.  Note that NaN is also explicitly considered equal to NaN (a departure from the Javascript default).
 * `jazil.ShouldNotBe(value, expected, message)`<br>
   The opposite of `jazil.ShouldBe`.
 * `jazil.ShouldBeLoose(value, expected, message)`<br>

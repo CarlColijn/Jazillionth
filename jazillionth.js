@@ -93,7 +93,8 @@ class Jazillionth {
 
 
   ShouldBe(value, expected, message) {
-    if (value === expected)
+    // Also test with Object.is to catch NaN !== NaN by definition.
+    if (value === expected || Object.is(value, expected))
       return
     else
       this.#HandleFeedback(message, `expected ${expected}, got ${value}`)
@@ -101,7 +102,8 @@ class Jazillionth {
 
 
   ShouldNotBe(value, expected, message) {
-    if (value !== expected)
+    // Also test with Object.is to catch NaN !== NaN by definition.
+    if (value !== expected && !Object.is(value, expected))
       return
     else
       this.#HandleFeedback(message, `value is ${expected}`)
@@ -109,7 +111,8 @@ class Jazillionth {
 
 
   ShouldBeLoose(value, expected, message) {
-    if (value == expected)
+    // Also test with Object.is to catch NaN != NaN by definition.
+    if (value == expected || Object.is(value, expected))
       return
     else
       this.#HandleFeedback(message, `expected ${expected}, got ${value}`)
@@ -117,7 +120,8 @@ class Jazillionth {
 
 
   ShouldNotBeLoose(value, expected, message) {
-    if (value != expected)
+    // Also test with Object.is to catch NaN != NaN by definition.
+    if (value != expected && !Object.is(value, expected))
       return
     else
       this.#HandleFeedback(message, `value is ${expected}`)
