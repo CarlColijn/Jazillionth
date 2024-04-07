@@ -34,6 +34,15 @@ class OpenExamplePagesThread(threading.Thread):
 
 
 class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
+  extensions_map = {
+    '.html': 'text/html',
+    '.png': 'image/png',
+    '.jpg': 'image/jpg',
+    '.css':	'text/css',
+    '.js':	'text/javascript',
+    '': 'application/octet-stream'
+  }
+
   def end_headers(self):
     self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
     self.send_header('Pragma', 'no-cache')
