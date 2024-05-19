@@ -49,7 +49,7 @@ class Jazillionth {
   */
 
 
-  StartTests() {
+  async StartTests() {
     this.#ResetTestState()
 
     this.#ClearPreviousResults()
@@ -58,7 +58,7 @@ class Jazillionth {
   }
 
 
-  ContinueTests(delayed) {
+  async ContinueTests(delayed) {
     if (delayed)
       setTimeout(() => {
         this.#RunTestLoop()
@@ -387,7 +387,7 @@ class Jazillionth {
   }
 
 
-  #RunTestLoop() {
+  async #RunTestLoop() {
     this.#testsRunning = true
     let keepRunning = true
     do {
@@ -402,7 +402,7 @@ class Jazillionth {
           keepRunning = this.#OnBeforePageTests()
           break
         case this.#State.setTests:
-          keepRunning = this.#OnSetTests()
+          keepRunning = await this.#OnSetTests()
           break
         case this.#State.afterPageTests:
           keepRunning = this.#OnAfterPageTests()
@@ -448,12 +448,16 @@ class Jazillionth {
   }
 
 
-  #RunSetTests(testPage, testSet) {
+  async #RunSetTests(testPage, testSet) {
     let setPassed = true
 
     for (let testName in testSet.tests) {
       try {
-        testSet.tests[testName](this, testName, testSet, testPage)
+        // Wrap the function to test in an async lambda so
+        // that we can await on it even if it's synchronous;
+        // this keeps the ui responsive.
+        let TestFunction = async () => { await testSet.tests[testName](this, testName, testSet, testPage) }
+        await TestFunction()
 
         ++this.#numPasses
         this.#AddTestResult(testName, undefined)
@@ -466,13 +470,15 @@ class Jazillionth {
           this.#AddTestResult(testName, exception)
         }
       }
+
+      this.#ShowTestState()
     }
 
     return setPassed
   }
 
 
-  #OnSetTests() {
+  async #OnSetTests() {
     let testPage = this.#GetCurrentPage()
     let testSet = this.#GetCurrentSet(testPage)
 
@@ -481,7 +487,7 @@ class Jazillionth {
     if (this.#testsRunning) {
       let currentSetElement = this.#AddTestSetHeader(testSet)
 
-      let setPassed = this.#RunSetTests(testPage, testSet)
+      let setPassed = await this.#RunSetTests(testPage, testSet)
 
       this.#SetResultStyle(currentSetElement, setPassed, true)
 

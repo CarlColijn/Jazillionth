@@ -168,10 +168,13 @@ The resulting TestSet object will get the following properties:
 * `tests`: dictionary of test functions<br>
   The test function dictionary you specified.
 
-The test functions themselves should have the following signature;
+The test functions themselves should have the following signature (synchronous and asynchronous test functions are supported);
 
 ```js
 function(jazil, testName, testSet, testPage) {
+}
+
+async function(jazil, testName, testSet, testPage) {
 }
 ```
 
@@ -239,6 +242,8 @@ Note also that there is no opposite to `jazil.Fail`; if a test goes well, you do
 
 When your test function implicitly or explicitly throws an exception itself, Jazillionth will catch that too and mark the test as 'failed'.  If you know that the code your unit tests could throw an exception, you thus do not have to wrap that call in a try/catch block to prevent the tests breaking.  However, depending on the type of exception used, you will or will not get a proper call stack trace in that failed test's logs.  When your code uses the standard `Error` exception type (or any other type derived from it), a call stack trace is added.  All other exception types (e.g., `throw`ing raw strings and such) will most likely not get a call stack trace.  Do note though that while support for getting the call stack trace is common in all major browsers, it is not standardized (yet) and might thus not always work.
 
+If your test function needs to test asynchronous functions, you must `await` on the result of these asynchronous function calls before exiting the test function itself.  This also implies that the test function itself needs to be marked `async`.  If you don't, Jazillionth will happily assume the test passed and it will continue with the next test.
+
 
 
 ## Accessing the page under test
@@ -283,6 +288,8 @@ However, when your test sets depend on user interaction, you can alter the test 
   A user-defined function to run after each test set on a page under test is tested.  Its signature should be `OnAfterSetTests(jazil, testPage, testSet, testedOK)`.  `jazil` is the fully set-up Jazillionth object doing the tests, `testPage` is the TestPage object returned by the original call to `AddPageToTest`, `testSet` is the TestSet object returned by the original call to `AddTestSet`, and `testedOK` is a boolean indicating if all tests ran OK for this test set.
 
 If you let Jazillionth pause its testing, then you can continue the tests at a later time by calling `ContinueTests` on the Jazillionth object.  For a more finely controlled code execution flow you can pass an optional boolean argument to indicate you want a delayed continuation.  With delayed continuation the tests will only resume running after your current script is done.  (This is arranged via a setTimeout with a delay of zero.)
+
+Do note that `StartTests` and `ContinueTests` are asynchronous functions, and they will return before the tests have finished.  So if you want your script to wait for the tests to be done before the rest of your script runs, you have to `await` on them.
 
 
 
@@ -1231,7 +1238,7 @@ jazil.AddTestSet(mainPage, 'Main page tests', {
 
 ### Example #9 - skipping certain tests
 
-We're going to do create two very related test sets, each containing a few tests.  We're going to add 1 to a number, add a number to 1, subtract 1 from a number, and subtract a number from 1.  We're going to do this for two even and two odd numbers.  This should result in 16 tests in total.
+We're going to create two very related test sets, each containing a few tests.  We're going to add 1 to a number, add a number to 1, subtract 1 from a number, and subtract a number from 1.  We're going to do this for two even and two odd numbers.  This should result in 16 tests in total.
 
 However, we're quite sure we were taught in school that it isn't allowed to subtract with an odd number...  We're therefore going to properly skip those particular tests.  These will then also not end up in the test log; in the end only 12 tests will be ran and counted.
 
@@ -1307,4 +1314,110 @@ AddSpecificTestSet(2)
 AddSpecificTestSet(3)
 AddSpecificTestSet(4)
 AddSpecificTestSet(5)
+```
+
+
+
+### Example #10 - testing asynchronous functions
+
+We're going to test a mix of synchronous and asynchronous functions.  For that we're going to add an asynchronous `AddAsync` version to `Summer`.  To make it extra clear that everything is running asynchronously, we're going to make `AddAsync` also wait a bit before returning the answer, so that we can control how long our tests take.  The browser should remain responsive in the meantime, so you should see the test results come in one by one (except for the one still synchronous test which should be instant).
+
+The main page's script is also going to use this asynchronous version.  To make matters even more interesting, the main page is going to take a fair bit longer to compute than all our tests combined, so that our main page test will need to wait for the result to come in.
+
+For that we make the following alterations to the base example:
+
+File `scripting/summer.js`: add an async version of the `Add` method after the existing `Add` method:
+
+```js
+  async AddAsync(value, millisecToDelay) {
+    await new Promise(function(resolve) {
+      setTimeout(resolve, millisecToDelay)
+    })
+
+    if (!this.#finalized)
+      this.#sum += value
+  }
+```
+
+File `scripts/main.js`: make it use the async version in a way that takes 6 seconds, so replace the entire content with:
+```js
+$(document).ready(async function() {
+  // Wait 6 seconds in total.
+  let summer = new Summer
+  await summer.AddAsync(1, 1500)
+  await summer.AddAsync(2, 1500)
+  await summer.AddAsync(3, 1500)
+  await summer.AddAsync(4, 1500)
+  $('#result').text(summer.result)
+})
+```
+
+File `testing/tests.js`: replace the entire content with:
+
+```js
+let options = {
+  'showPassedTests': true // to see the tests coming in one by one
+}
+let jazil = new Jazillionth(options)
+let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer'])
+
+
+// This test set will take 2 seconds.
+jazil.AddTestSet(mainPage, 'Summer tests', {
+  // This test will take 1 second.
+  'Summer test asynchronous #1, done at t=1 second': async function(jazil) {
+    let summer = new Summer
+
+    await summer.AddAsync(1, 500)
+    await summer.AddAsync(1, 500)
+    jazil.ShouldBe(summer.result, 2)
+  },
+
+  // This test will be instant.
+  'Summer test synchronous, done at t=1 second': function(jazil) {
+    let summer = new Summer
+
+    summer.Add(2)
+    summer.Add(2)
+    jazil.ShouldBe(summer.result, 4)
+  },
+
+  // This test will take 1 second.
+  'Summer test asynchronous #2, done at t=2 seconds': async function(jazil) {
+    let summer = new Summer
+
+    await summer.AddAsync(2, 500)
+    await summer.AddAsync(2, 500)
+    jazil.ShouldBe(summer.result, 4)
+  },
+})
+
+
+jazil.AddTestSet(mainPage, 'Main page tests', {
+  'The main page should list the correct answer, done at t=6 seconds': async function(jazil) {
+    // This test runs after 2 seconds, while the main page's answer
+    // will be ready after 6 seconds.  The answer is thus not yet
+    // known right now, so this should be a fair polling test.
+
+    let resultElement = $(jazil.testDocument).find('#result')
+
+    let waitingForResult
+    let resultText
+    let result
+    let milliSecsWaited = 0
+    do {
+      resultText = resultElement.text()
+      waitingForResult =
+        resultText == '?' &&    // result not known yet
+        milliSecsWaited < 10000 // give up after 10 seconds
+      if (waitingForResult) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+        milliSecsWaited += 100
+      }
+    } while (waitingForResult)
+    result = parseInt(resultText)
+
+    jazil.ShouldBe(result, 10)
+  }
+})
 ```
