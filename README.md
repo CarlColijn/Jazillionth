@@ -2,7 +2,6 @@
 
 **JavaScript's Zillionth Testing Harness**
 
-
 <img src="logo.png">
 
 
@@ -345,10 +344,70 @@ If you have Python 3 installed, then you can also use `testExamples.py` from the
 
 
 
+## Change log
+
+- ### May 19, 2024 - v2024.05.19
+  #### Small BREAKING CHANGE: added support for asynchronous test functions
+
+  Jazillionth now supports async test functions. This also implies that the core testing functions are now completely asynchronous too, which gives UI responsiveness.
+
+  BREAKING CHANGE: If your code starts and/or continues tests manually by explicitly calling StartTests and ContinueTests, and if there is more code following these calls, you might want to await when calling these functions too. The old behavior was that calls to StartTests and ContinueTests would only return once the tests finished, but now these functions return immediately so that the code below these calls starts running before the tests have completed.
+- ### March 16, 2024 - v2024.03.16.2
+  #### Added ability to conditionally skip tests
+
+  You can now call jazil.SkipTest() from within your unit tests to skip that test. The test will then not be counted towards the total number of tests, nor will it end up in the test log.
+- ### March 16, 2024 - v2024.03.16
+  #### Small BREAKING CHANGE w.r.t. testing for NaN
+
+  When comparing with NaN, Javascript treats NaN === NaN as false and NaN !== NaN as true; exactly the opposite of how other values compare. This makes it impossible to use ShouldBe and all related tests when your testing values can sometimes both equal NaN. ShouldBe etc. now explicitly makes NaN compare equal to NaN.
+- ### March 1, 2024 - v2024.03.01
+  #### Added documentation on best practices when throwing exceptions
+
+  It's perfectly fine to throw your own exceptions from within your unit tests or any code your unit test calls. Jazillionth will just fail that test automatically. You thus do not need to meticulously use try/catch blocks in your unit tests to prevent exceptions from leaking out.
+
+  Documentation on best practices and how this all works was however missing. The general documentation has been updated, especially on how to retain a call stack trace in the logs. Example #6 has also been augmented to show how Jazillionth reacts to unit tests throwing their own exceptions.
+
+  And since Jazillionth has been in use for quite a while now while not showing any issues, I've decided to drop the 'Beta' label.
+- ### September 23, 2023 - v2023.09.23-beta
+  #### Small BREAKING CHANGE as well as another usability upgrade
+
+  BREAKING CHANGE FIRST: the optional startup option IgnoreCallStackLinesWith has been case-corrected into ignoreCallStackLinesWith, identical to other same-functioning options.
+
+  And Jazillionth gained a workaround for testing live updates to global variables containing literal numbers and strings.
+
+  Plus an internal re-write to use more new-fangled ECMAScript 6.0 functionality; it's already 2023 after all.
+- ### September 22, 2023 - v2023.09.22-beta
+  #### Major updates to make Jazillionth more versatile in use
+
+  Jazillionth can now also test pages in-line, and removed the restriction of what type of objects can be accessed from the test script.
+- ### March 11, 2023 - v2023.02.11-beta
+  #### Added exception testing and improved testing server script
+
+  As per the title; added enough extras to warrant a new release by now.
+- ### April 2, 2022 - v20222.04.02-beta
+  #### Safer ShouldBe assertion testing
+
+  BEWARE: this is a breaking change!
+
+  jazil.ShouldBe from now on does a strict === compare instead of a regular == compare. This is done to make all ShouldBe assertions comparing to zero-like values behave safely out-of-the-box. Previously you'd have to remember to use ShouldBeStrict in that case, which is error prone.
+
+  jazil.ShouldNotBe has been adapted likewise, and the ShouldBeStrict and ShouldNotBeStrict methods have been replaced with ShouldBeLoose and ShouldNotBeLoose to keep the regular comparison functionality available.
+- ### December 11, 2021 - v2021.12.11-beta
+  #### Multi-page testing
+
+  Added multi-page testing and test flow pausing/continuation via user supplied event handlers.
+- ### December 5, 2021 - v2021.12.5-beta
+  #### Initial beta release
+
+  Initial beta release; might still be a bit rough around the edges.
+
+
+
 <a name="examples"></a>
 ## Examples
 
 All examples below can also be found in the `examples` folder in this repository.  Since it's far easier if all examples just use the main `jazillionth.js` file, the file hierarchy is a bit upside down; all test suite pages reach high up to the root of the repository to include the `jazillionth.js` file.  Therefore, when running these examples as-is, ensure your web root is pointing to the repository root.
+
 
 
 ### Example #0 - base example
