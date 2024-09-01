@@ -292,15 +292,21 @@ class Jazillionth {
     tracked: {},
     untracked: {}
   }
-  #MapObjectsOfType(objectNames, objectType) {
+  #MapObjectsOfType(objectNames, objectType, objectDescription) {
     if (objectNames !== undefined) {
       for (let objectNameNr in objectNames) {
         let objectName = objectNames[objectNameNr]
-        this.#mappedObjectNames.push(objectName)
-        if (objectType === this.#ObjectType.tracked)
-          window[objectName] = this.#testWindow.eval(`Function("return ${objectName}")`)
-        else
-          window[objectName] = this.#testWindow.eval(objectName)
+
+        try {
+          this.#mappedObjectNames.push(objectName)
+          if (objectType === this.#ObjectType.tracked)
+            window[objectName] = this.#testWindow.eval(`Function("return ${objectName}")`)
+          else
+            window[objectName] = this.#testWindow.eval(objectName)
+        }
+        catch (exception) {
+          throw Error(`Jazillionth: ${objectDescription} "${objectName}" is not defined in your code.`)
+        }
       }
     }
   }
@@ -313,8 +319,8 @@ class Jazillionth {
       this.#testWindow = this.#iframeElement[0].contentWindow
       this.#testDocument = this.#testWindow.document || this.#iframeElement[0].contentDocument
 
-      this.#MapObjectsOfType(testPage.accessObjectNames, this.#ObjectType.untracked)
-      this.#MapObjectsOfType(testPage.trackObjectNames, this.#ObjectType.tracked)
+      this.#MapObjectsOfType(testPage.accessObjectNames, this.#ObjectType.untracked, 'accessObjectName')
+      this.#MapObjectsOfType(testPage.trackObjectNames, this.#ObjectType.tracked, 'trackObjectName')
     }
     else {
       this.#testWindow = window

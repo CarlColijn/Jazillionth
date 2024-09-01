@@ -346,6 +346,8 @@ If you have Python 3 installed, then you can also use `testExamples.py` from the
 
 ## Change log
 
+- ### September 1, 2024 - v2024.09.01
+  Jazillionth now raises a descriptive exception when you specify an unknown object in either a 'accessObjectNames' or 'trackObjectNames' list, instead of quitting due to an error.
 - ### May 19, 2024 - v2024.05.19
   #### Small BREAKING CHANGE: added support for asynchronous test functions
 
