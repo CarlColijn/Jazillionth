@@ -241,6 +241,7 @@ class Jazillionth {
     this.#SetConfig(options, 'textColor', '#ffffff')
 
     this.#SetConfig(options, 'showPassedTests', false)
+    this.#SetConfig(options, 'showResultWhenDone', true)
 
     this.#SetConfig(options, 'OnBeforePageTests', undefined)
     this.#SetConfig(options, 'OnAfterPageTests', undefined)
@@ -533,6 +534,8 @@ class Jazillionth {
 
   #OnDone() {
     this.#testsRunning = false
+    if (this.#options.showResultWhenDone)
+      this.#resultElement[0].scrollIntoView()
     return false
   }
 

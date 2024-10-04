@@ -311,6 +311,8 @@ The complete list of all Jazillionth options is:
   The color for text and borders.
 * `showPassedTests`: bool (default: `false`)<br>
   The test page has a button to toggle the visibility of all passed tests.  The `showPassedTests` option sets the initial state of this button.
+* `showResultWhenDone`: bool (default: `true`)<br>
+  When all tests are done Jazillionth will scroll the page back to the top of the result listing.  If you do not want this, set this option to `false`.
 * `ignoreCallStackLinesWith`: array of string (default: `jquery.com`)<br>
   If a call stack line from a failed test result contains a string from this list, that call stack line is not displayed.  You can use this to pass in extra library identifying strings to suppress library call stack entries (which would not add clarity to the test log).  No matter what you pass, `jazillionth.js` is always added for you to this list.  Do note that case sensitive string comparison is used!
 * `startAutomatically`: bool (default: `true`)<br>
