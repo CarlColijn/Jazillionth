@@ -424,6 +424,8 @@ We want to test a simple HTML page which uses a `Summer` class to sum two number
 File `main.html`:
 
 ```html
+<!DOCTYPE html>
+
 <html>
   <head>
     <meta charset="utf-8">
@@ -473,6 +475,8 @@ document.addEventListener('DOMContentLoaded', () => {
 File `testing/tests.html`:
 
 ```html
+<!DOCTYPE html>
+
 <html>
   <head>
     <meta charset="utf-8">
@@ -530,7 +534,7 @@ File `testing/tests.html`: replace `<body></body>` with:
 
 ```html
   <body>
-    <h1>Page under test</h1>
+    <h1>Page-under-test</h1>
     <iframe id="testFrame"></iframe>
 
     <div id="testResult">
@@ -563,9 +567,9 @@ we have an extra class `Multiplier` to test, so together with the `Summer` tests
 File `scripts/multiplier.js`: a new file; give it the following content:
 
 ```js
-function Multiplier() {
-  this.#finalized = false
-  this.#product = 1
+class Multiplier {
+  #finalized = false
+  #product = 1
 
   Add(value) {
     if (!this.#finalized)
@@ -581,21 +585,6 @@ function Multiplier() {
     return !this.#finalized
   }
 }
-```
-
-File `main.html`: add the following script include:
-
-```html
-    <script src="scripts/multiplier.js"></script>
-```
-
-File `main.html`: replace `<body></body>` with:
-
-```html
-  <body>
-    1 + 2 + 4 = <span id="sumResult">?</span><br>
-    2 * 3 * 5 = <span id="multiplyResult">?</span>
-  </body>
 ```
 
 File `scripts/main.js`: replace its content with:
@@ -614,6 +603,21 @@ document.addEventListener('DOMContentLoaded', () => {
   multiplier.Add(5)
   document.getElementById('multiplyResult').textContent = multiplier.result
 })
+```
+
+File `main.html`: add the following script include:
+
+```html
+    <script src="scripts/multiplier.js"></script>
+```
+
+File `main.html`: replace `<body></body>` with:
+
+```html
+  <body>
+    1 + 2 + 4 = <span id="sumResult">?</span><br>
+    2 * 3 * 5 = <span id="multiplyResult">?</span>
+  </body>
 ```
 
 File `testing/tests.js`: we're going to divide this up over several files, so it can be deleted.
@@ -1005,6 +1009,7 @@ function OnBeforePageTests(jazil, testPage) {
     // Continue delayed, so that we're sure the page's own code
     // ran for the calculate button.
     jazil.ContinueTests(true)
+    alert('Main tests underway...')
   })
 }
 
@@ -1138,7 +1143,7 @@ function TestSummer(value1, value2, OnErrorHandler) {
   summer.Add(value2)
   let summerResult = summer.result
 
-  if (summerResult != correctResult)
+  if (summerResult !== correctResult)
     OnErrorHandler(summerResult, correctResult)
 }
 ```
@@ -1257,7 +1262,7 @@ File `testing/tests.js`: replace the file's content with:
 
 ```js
 let jazil = new Jazillionth()
-let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer', 'g_untrackedTotalSummed'], ['g_trackedTotalSummed'])
+let mainPage = jazil.AddPageToTest('main', '../main.html', ['Summer','g_untrackedTotalSummed'], ['g_trackedTotalSummed'])
 
 
 jazil.AddTestSet(mainPage, 'Summer tests', {

@@ -11,6 +11,7 @@ function OnBeforePageTests(jazil, testPage) {
     // Continue delayed, so that we're sure the page's own code
     // ran for the calculate button.
     jazil.ContinueTests(true)
+    alert('Main tests underway...')
   })
 }
 

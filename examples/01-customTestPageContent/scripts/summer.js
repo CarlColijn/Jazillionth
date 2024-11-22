@@ -12,7 +12,7 @@ class Summer {
     return this.#sum
   }
 
-  get CanAdd() {
+  get canAdd() {
     return !this.#finalized
   }
 }
