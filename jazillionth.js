@@ -249,7 +249,6 @@ class Jazillionth {
     this.#SetConfig(options, 'OnAfterSetTests', undefined)
 
     this.#SetConfig(options, 'ignoreCallStackLinesWith', [])
-    this.#options.ignoreCallStackLinesWith.push('jquery.com')
     this.#options.ignoreCallStackLinesWith.push('jazillionth.js')
 
     this.#testPages = []
@@ -268,13 +267,15 @@ class Jazillionth {
 
 
   #RegisterReadyHandler() {
-    $(document).ready(() => {
+    window.addEventListener('load', () => {
       this.#SetupStyles()
 
       this.#AddResultListing()
 
       if (this.#options.startAutomatically)
-        this.StartTests()
+        setTimeout(() => {
+          this.StartTests()
+        }, 0)
     })
   }
 
@@ -317,8 +318,8 @@ class Jazillionth {
     this.#UnmapObjects()
 
     if (testPage.isExternalPage) {
-      this.#testWindow = this.#iframeElement[0].contentWindow
-      this.#testDocument = this.#testWindow.document || this.#iframeElement[0].contentDocument
+      this.#testWindow = this.#iframeElement.contentWindow
+      this.#testDocument = this.#testWindow.document || this.#iframeElement.contentDocument
 
       this.#MapObjectsOfType(testPage.accessObjectNames, this.#ObjectType.untracked, 'accessObjectName')
       this.#MapObjectsOfType(testPage.trackObjectNames, this.#ObjectType.tracked, 'trackObjectName')
@@ -428,7 +429,7 @@ class Jazillionth {
     if (testPage.isExternalPage) {
       this.#EnsureIFrameAdded()
 
-      this.#iframeElement.attr("src", testPage.url)
+      this.#iframeElement.setAttribute('src', testPage.url)
 
       return false // we'll continue from the iframe's load event
     }
@@ -535,7 +536,7 @@ class Jazillionth {
   #OnDone() {
     this.#testsRunning = false
     if (this.#options.showResultWhenDone)
-      this.#resultElement[0].scrollIntoView()
+      this.#resultElement.scrollIntoView()
     return false
   }
 
@@ -555,18 +556,18 @@ class Jazillionth {
       // is the correct time to start the tests.
 
       if (this.#options.iframeElementSpec !== undefined)
-        this.#iframeElement = $(this.#options.iframeElementSpec)
+        this.#iframeElement = document.querySelector(this.#options.iframeElementSpec)
       else {
-        this.#iframeElement =
-          $('<iframe id="jazilTestFrame"></iframe>').
-          appendTo($('body'))
+        this.#iframeElement = document.createElement('iframe')
+        this.#iframeElement.setAttribute('id', 'jazilTestFrame')
+        document.querySelector('body').appendChild(this.#iframeElement)
       }
 
       // We're using a combination of onload and setTimeout;
       // - onload to wait for the iframe to be available, and
       // - setTimeout to run async so our tests hopefully run after
       //   any other scheduled javascript has ran in the iframe.
-      this.#iframeElement.on('load', () => {
+      this.#iframeElement.addEventListener('load', () => {
         setTimeout(() => {
           this.#OnPageReady()
         }, 0)
@@ -576,159 +577,165 @@ class Jazillionth {
 
 
   #UpdatePassedStyle(showPassed) {
-    let passedDisplayMode = showPassed? 'inherit': 'none'
+    let passedDisplayMode = showPassed ? 'inherit' : 'none'
 
-    $('#jazilPassedStyles').
-      html(`
-        .jazilShowPassed {
-          display: ${passedDisplayMode};
-        }
-      `)
+    let styleElement = document.getElementById('jazilPassedStyles')
+    styleElement.textContent = `
+      .jazilShowPassed {
+        display: ${passedDisplayMode};
+      }
+    `
   }
 
 
   #SetupStyles() {
-    $('<style type="text/css"></style>').
-      html(`
-        #jazilTestFrame {
-          width: 100%;
-          height: 800px;
-          border: 1px solid ${this.#options.textColor};
-        }
+    let headElement = document.querySelector('head')
 
-        #jazilResult {
-          border: 1px solid ${this.#options.textColor};
-          padding: 0.3em;
-          color: ${this.#options.textColor};
-        }
+    let mainStylesElement = document.createElement('style')
+    mainStylesElement.setAttribute('type', 'text/css')
+    mainStylesElement.textContent = `
+      #jazilTestFrame {
+        width: 100%;
+        height: 800px;
+        border: 1px solid ${this.#options.textColor};
+      }
 
-        #jazilResultHeader {
-        }
+      #jazilResult {
+        border: 1px solid ${this.#options.textColor};
+        padding: 0.3em;
+        color: ${this.#options.textColor};
+      }
 
-        #jazilResultState {
-          font-size: 1.4em;
-        }
+      #jazilResultHeader {
+      }
 
-        #jazilToggleStateDisplay {
-          margin-left: 1em;
-        }
+      #jazilResultState {
+        font-size: 1.4em;
+      }
 
-        #jazilResultTable {
-          border-collapse: collapse;
-          margin-top: 1em;
-          margin-left: 1em;
-        }
+      #jazilToggleStateDisplay {
+        margin-left: 1em;
+      }
 
-        #jazilResultTable tr {
-          border: 1px solid ${this.#options.textColor};
-          width: 100%;
-        }
+      #jazilResultTable {
+        border-collapse: collapse;
+        margin-top: 1em;
+        margin-left: 1em;
+      }
 
-        #jazilResultTable tr {
-          color: ${this.#options.textColor};
-        }
+      #jazilResultTable tr {
+        border: 1px solid ${this.#options.textColor};
+        width: 100%;
+      }
 
-        .jazilPageResult td {
-          padding: 2px 4px 2px 0px;
-        }
+      #jazilResultTable tr {
+        color: ${this.#options.textColor};
+      }
 
-        .jazilPageResult td {
-          font-size: 1.3em;
-          padding-left: 0.2em;
-        }
+      .jazilPageResult td {
+        padding: 2px 4px 2px 0px;
+      }
 
-        .jazilSetResult td {
-          font-size: 1.2em;
-          padding-left: 1em;
-        }
+      .jazilPageResult td {
+        font-size: 1.3em;
+        padding-left: 0.2em;
+      }
 
-        .jazilTestResult td {
-          padding-left: 2em;
-        }
+      .jazilSetResult td {
+        font-size: 1.2em;
+        padding-left: 1em;
+      }
 
-        .jazilUnknown {
-          background-color: inherit;
-        }
+      .jazilTestResult td {
+        padding-left: 2em;
+      }
 
-        .jazilPassed {
-          background-color: ${this.#options.passColor};
-        }
+      .jazilUnknown {
+        background-color: inherit;
+      }
 
-        .jazilFailed {
-          background-color: ${this.#options.failColor};
-        }
-      `).
-      appendTo('head')
+      .jazilPassed {
+        background-color: ${this.#options.passColor};
+      }
 
-    $('<style id="jazilPassedStyles" type="text/css"></style>').
-      appendTo('head')
+      .jazilFailed {
+        background-color: ${this.#options.failColor};
+      }
+    `
+    headElement.appendChild(mainStylesElement)
+
+    let passedStylesElement = document.createElement('style')
+    passedStylesElement.setAttribute('type', 'text/css')
+    passedStylesElement.setAttribute('id', 'jazilPassedStyles')
+    headElement.appendChild(passedStylesElement)
 
     this.#UpdatePassedStyle(this.#options.showPassedTests)
   }
 
 
   #AddResultListing() {
-    let parentElement = $(this.#options.resultElementSpec)
+    let parentElement = document.querySelector(this.#options.resultElementSpec)
 
-    this.#resultElement =
-      $('<div id="jazilResult"></div>').
-      appendTo(parentElement)
+    this.#resultElement = document.createElement('div')
+    this.#resultElement.setAttribute('id', 'jazilResult')
+    parentElement.appendChild(this.#resultElement)
 
-    let resultHeaderElement =
-      $('<div id="jazilResultHeader"></div>').
-      appendTo(this.#resultElement)
+    let resultHeaderElement = document.createElement('div')
+    resultHeaderElement.setAttribute('id', 'jazilResultHeader')
+    this.#resultElement.appendChild(resultHeaderElement)
 
-    this.#resultStateElement =
-      $('<span id="jazilResultState"></span>').
-      appendTo(resultHeaderElement)
+    this.#resultStateElement = document.createElement('span')
+    this.#resultStateElement.setAttribute('id', 'jazilResultState')
+    resultHeaderElement.appendChild(this.#resultStateElement)
 
     let setDisplayModeElementText = (showAll) => {
-      this.#toggleDisplayModeElement.text(
-        this.#showingPassedTests?
-        'Hide passed tests':
+      this.#toggleDisplayModeElement.textContent =
+        this.#showingPassedTests ?
+        'Hide passed tests' :
         'Show all tests'
-      )
     }
-    this.#toggleDisplayModeElement =
-    $('<button id="jazilToggleStateDisplay"></button>').
-      on('click', () => {
-        this.#showingPassedTests = !this.#showingPassedTests
-        this.#UpdatePassedStyle(this.#showingPassedTests)
-        setDisplayModeElementText(this.#showingPassedTests)
-      }).
-      appendTo(resultHeaderElement)
+    this.#toggleDisplayModeElement = document.createElement('button')
+    this.#toggleDisplayModeElement.setAttribute('id', 'jazilToggleStateDisplay')
+    resultHeaderElement.appendChild(this.#toggleDisplayModeElement)
+    this.#toggleDisplayModeElement.addEventListener('click', () => {
+      this.#showingPassedTests = !this.#showingPassedTests
+      this.#UpdatePassedStyle(this.#showingPassedTests)
+      setDisplayModeElementText(this.#showingPassedTests)
+    })
     this.#showingPassedTests = this.#options.showPassedTests
     setDisplayModeElementText(this.#showingPassedTests)
 
-    this.#resultTableElement =
-      $('<table id="jazilResultTable"></table>').
-      appendTo(this.#resultElement)
+    this.#resultTableElement = document.createElement('table')
+    this.#resultTableElement.setAttribute('id', 'jazilResultTable')
+    this.#resultElement.appendChild(this.#resultTableElement)
 
     this.#ShowTestState()
   }
 
 
   #AddTestPageHeader(testPage) {
-    let rowElement = $('<tr class="jazilPageResult"></tr>')
+    let rowElement = document.createElement('tr')
+    rowElement.classList.add('jazilPageResult')
 
-    let rowElementContent = $('<td></td>')
-    rowElementContent.text(`${testPage.name} (${testPage.url})`)
+    let rowContentElement = document.createElement('td')
+    rowContentElement.textContent = `${testPage.name} (${testPage.url})`
 
-    rowElement.append(rowElementContent)
-    this.#resultTableElement.append(rowElement)
+    rowElement.appendChild(rowContentElement)
+    this.#resultTableElement.appendChild(rowElement)
 
     return rowElement
   }
 
 
   #AddTestSetHeader(testSet) {
-    let rowElement = $('<tr class="jazilSetResult"></tr>')
+    let rowElement = document.createElement('tr')
+    rowElement.classList.add('jazilSetResult')
 
-    let rowElementContent = $('<td></td>')
-    rowElementContent.text(testSet.name)
+    let rowContentElement = document.createElement('td')
+    rowContentElement.textContent = testSet.name
 
-    rowElement.append(rowElementContent)
-    this.#resultTableElement.append(rowElement)
+    rowElement.appendChild(rowContentElement)
+    this.#resultTableElement.appendChild(rowElement)
 
     return rowElement
   }
@@ -737,52 +744,55 @@ class Jazillionth {
   #AddTestResult(name, error) {
     let passed = error === undefined
 
-    let rowElement = $('<tr class="jazilTestResult"></tr>')
+    let rowElement = document.createElement('tr')
+    rowElement.classList.add('jazilTestResult')
     this.#SetResultStyle(rowElement, passed, true)
 
-    let rowElementContent = $('<td></td>')
+    let rowContentElement = document.createElement('td')
 
     if (passed)
-      rowElementContent.text(`${name}: passed`)
+      rowContentElement.textContent = `${name}: passed`
     else {
-      rowElementContent.text(`${name}: failed`)
+      rowContentElement.textContent = `${name}: failed`
 
-      $('<div></div>').
-      text(error).
-      appendTo(rowElementContent)
+      let divElement = document.createElement('div')
+      divElement.textContent = error
+      rowContentElement.appendChild(divElement)
 
-      $('<pre></pre>').
-      text(this.#GetCallStack(error)).
-      appendTo(rowElementContent)
+      let preElement = document.createElement('pre')
+      preElement.textContent = this.#GetCallStack(error)
+      rowContentElement.appendChild(preElement)
     }
 
-    rowElement.append(rowElementContent)
-    this.#resultTableElement.append(rowElement)
+    rowElement.appendChild(rowContentElement)
+    this.#resultTableElement.appendChild(rowElement)
   }
 
 
   #SetResultStyle(element, passed, addDisplayClass) {
-    element.addClass(passed? 'jazilPassed': 'jazilFailed')
+    element.classList.add(passed ? 'jazilPassed' : 'jazilFailed')
     if (addDisplayClass)
-      element.addClass(passed? 'jazilShowPassed': 'jazilShowFailed')
+      element.classList.add(passed ? 'jazilShowPassed' : 'jazilShowFailed')
   }
 
 
   #ClearPreviousResults() {
-    this.#resultTableElement.find('tr').remove()
+    this.#resultTableElement.querySelectorAll('tr').forEach((rowElement) => {
+      rowElement.remove()
+    })
   }
 
 
   #ShowTestState() {
     if (this.#state === this.#State.toStart) {
-      this.#resultElement.addClass('jazilUnknown')
-      this.#resultStateElement.text('Tests not started')
+      this.#resultElement.classList.add('jazilUnknown')
+      this.#resultStateElement.textContent = 'Tests not started'
     }
     else {
       this.#SetResultStyle(this.#resultElement, this.#numFails == 0, false)
       let testingState = this.#state === this.#State.done ? 'done' : 'in progress';
       let TestCount = (count) => `${count} test${count === 1 ? '' : 's'}`
-      this.#resultStateElement.text(`Tests ${testingState}; ${TestCount(this.#numPasses)} passed, ${TestCount(this.#numFails)} failed.`)
+      this.#resultStateElement.textContent = `Tests ${testingState}; ${TestCount(this.#numPasses)} passed, ${TestCount(this.#numFails)} failed.`
     }
   }
 

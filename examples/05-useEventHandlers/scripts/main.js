@@ -1,17 +1,17 @@
 function Calculate() {
-  let value1 = parseInt($('#value1').val())
-  let value2 = parseInt($('#value2').val())
+  let value1 = parseInt(document.getElementById('value1').value)
+  let value2 = parseInt(document.getElementById('value2').value)
 
   let summer = new Summer
   summer.Add(value1)
   summer.Add(value2)
   let result = summer.result
 
-  $('#result').val(result)
+  document.getElementById('result').value = result
   localStorage.setItem('result', result)
 }
 
 
-$(document).ready(function() {
-  $('#calculate').on('click', Calculate)
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('calculate').addEventListener('click', Calculate)
 })

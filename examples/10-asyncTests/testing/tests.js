@@ -42,14 +42,14 @@ jazil.AddTestSet(mainPage, 'Main page tests', {
     // will be ready after 6 seconds.  The answer is thus not yet
     // known right now, so this should be a fair polling test.
 
-    let resultElement = $(jazil.testDocument).find('#result')
+    let resultElement = jazil.testDocument.getElementById('result')
 
     let waitingForResult
     let resultText
     let result
     let milliSecsWaited = 0
     do {
-      resultText = resultElement.text()
+      resultText = resultElement.textContent
       waitingForResult =
         resultText == '?' &&    // result not known yet
         milliSecsWaited < 10000 // give up after 10 seconds

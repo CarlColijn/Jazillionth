@@ -140,7 +140,7 @@ jazil.AddTestSet(mainPage, 'module Summer', {
 
 jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should list the correct answer': function(jazil) {
-    let shownResult = parseInt($(jazil.testDocument).find('#result').text())
+    let shownResult = parseInt(jazil.testDocument.getElementById('result').textContent)
 
     jazil.ShouldBe(shownResult, 5)
   }

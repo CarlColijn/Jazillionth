@@ -27,7 +27,7 @@ jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should calculate the correct answer': function(jazil) {
     let storedValue2 = parseInt(jazil.testWindow.localStorage.getItem('value2'))
     let storedResult = parseInt(jazil.testWindow.localStorage.getItem('result'))
-    let shownResult = parseInt($(jazil.testDocument).find('#result').text())
+    let shownResult = parseInt(jazil.testDocument.getElementById('result').textContent)
 
     jazil.Assert(!isNaN(storedResult), 'stored result is not numeric')
     jazil.Assert(!isNaN(storedValue2), 'stored value2 is not numeric')

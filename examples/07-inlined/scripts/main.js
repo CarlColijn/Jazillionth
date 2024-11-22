@@ -1,6 +1,6 @@
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', () => {
   let summer = new Summer
   summer.Add(1)
   summer.Add(4)
-  $('#result').text(summer.result)
+  document.getElementById('result').textContent = summer.result
 })

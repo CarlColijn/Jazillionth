@@ -10,9 +10,9 @@
 
 Jazillionth is a lightweight, non-intrusive, easy-to-use testing harness for automatically testing your JavaScript;
 
-* **Lightweight**: Jazillionth comes bundled in a single JavaScript file.  It only depends on jQuery being accessible but has no other dependencies.
+* **Lightweight**: Jazillionth comes bundled in a single JavaScript file, and has no external dependencies.
 * **Non-intrusive**: you do not need to add anything to the pages and scripts you want to test.  Jazillionth wraps your pages and scripts, and all of your testing code lives in a test suite wrapper around your pages.
-* **Easy-to-use**: you only need to create a simple test suite page which links to jQuery and Jazillionth, set up a Jazillionth object on it, and register your pages and tests with this object.  Next, just open the test suite page in your browser, and all tests should run automatically.  Done!
+* **Easy-to-use**: you only need to create a simple test suite page which links to Jazillionth, set up a Jazillionth object on it, and register your pages and tests with this object.  Next, just open the test suite page in your browser, and all tests should run automatically.  Done!
 
 As expected, Jazillionth doesn't promise the world and beyond, but that makes it very light weight in use and probably Good Enough for most scenarios.
 
@@ -32,7 +32,7 @@ Local files (opening files with the `file://` protocol) are not testable either.
 
 Last (but certainly not least), both the test suite page as well as the pages under test running in the iframe have their own scripts.  But the test suite page's script should not run before the page under test's script has run.  Jazillionth seems to get this right, but I have so far not been able to get absolute guarantees that the way Jazillionth manages this is a sure-fire way to ascertain this behavior.  If Jazillionth's tests run before your page under test's scripts have run, please let me know!
 
-If the above restrictions are a deal breaker in your situation, you can still use Jazillionth in in-line testing mode.  In that case you only need to add three link tags to your page's head section to link in jQuery, Jazillionth and your JavaScript test script.  This way an iframe is not necessary anymore which relaxes all security restraints mentioned above.  You should then be able to run your tests anywhere and anyhow you like, while still only minimally altering the page to test.
+If the above restrictions are a deal breaker in your situation, you can still use Jazillionth in in-line testing mode.  In that case you only need to add three link tags to your page's head section to link in Jazillionth and your JavaScript test script.  This way an iframe is not necessary anymore which relaxes all security restraints mentioned above.  You should then be able to run your tests anywhere and anyhow you like, while still only minimally altering the page to test.
 
 
 
@@ -56,11 +56,10 @@ Option 1. allows you to keep your testing code totally separate from the page un
 
 Jazillionth doesn't require much to get going.  The bare minimum that is needed on either the test suite page or the page under test is the following, in the given order:
 
-1. link to a recent-ish version of jQuery,
-2. link to Jazillionth,
-3. link to or inline your own testing code,
-4. create (and optionally configure) a Jazillionth object, and
-5. tell your Jazillionth object what tests to perform on which pages.
+1. link to Jazillionth,
+2. link to or inline your own testing code,
+3. create (and optionally configure) a Jazillionth object, and
+4. tell your Jazillionth object what tests to perform on which pages.
 
 By default, Jazillionth doesn't need anything else.  In the simplest use case it will:
 
@@ -299,10 +298,10 @@ The presentation of the test results and the exact working of Jazillionth can be
 
 The complete list of all Jazillionth options is:
 
-* `resultElementSpec`: jQuery element selector (default: `undefined`)<br>
-  By default, Jazillionth will append a <div> element at the end of the test suite page's content and place the test result logs in there.  If you want the test log to appear somewhere else, specify the jQuery element selector for that location.  The receiving element will also get its background color set to the resulting test outcome color.
-* `iframeElementSpec`: jQuery element selector (default: `undefined`)<br>
-  By default, Jazillionth will append an <iframe> element at the end of the test suite page's content and load the page under test in there.  If you want to use your own iframe for this, specify the jQuery element selector for that iframe.
+* `resultElementSpec`: css element selector (default: `undefined`)<br>
+  By default, Jazillionth will append a <div> element at the end of the test suite page's content and place the test result logs in there.  If you want the test log to appear somewhere else, specify the css element selector for that location.  The receiving element will also get its background color set to the resulting test outcome color.
+* `iframeElementSpec`: css element selector (default: `undefined`)<br>
+  By default, Jazillionth will append an <iframe> element at the end of the test suite page's content and load the page under test in there.  If you want to use your own iframe for this, specify the css element selector for that iframe.
 * `passColor`: css color code (default: `'#008000'`)<br>
   The background color for passed tests.
 * `failColor`: css color code (default: `'#800000'`)<br>
@@ -313,7 +312,7 @@ The complete list of all Jazillionth options is:
   The test page has a button to toggle the visibility of all passed tests.  The `showPassedTests` option sets the initial state of this button.
 * `showResultWhenDone`: bool (default: `true`)<br>
   When all tests are done Jazillionth will scroll the page back to the top of the result listing.  If you do not want this, set this option to `false`.
-* `ignoreCallStackLinesWith`: array of string (default: `jquery.com`)<br>
+* `ignoreCallStackLinesWith`: array of string (default: `''`)<br>
   If a call stack line from a failed test result contains a string from this list, that call stack line is not displayed.  You can use this to pass in extra library identifying strings to suppress library call stack entries (which would not add clarity to the test log).  No matter what you pass, `jazillionth.js` is always added for you to this list.  Do note that case sensitive string comparison is used!
 * `startAutomatically`: bool (default: `true`)<br>
   Whether to start all tests automatically when the test suite page is fully loaded.  See the chapter <a href="advancedTestFlow">Intervening in the test flow</a> for more details.
@@ -348,6 +347,10 @@ If you have Python 3 installed, then you can also use `testExamples.py` from the
 
 ## Change log
 
+- ### December 1, 2024 - v2024.12.01
+  Removed the dependency on jQuery.
+- ### October 4, 2024 - v2024.10.04
+  Jazillionth can now scroll the test result into view after all tests have ran.
 - ### September 1, 2024 - v2024.09.01
   Jazillionth now raises a descriptive exception when you specify an unknown object in either a 'accessObjectNames' or 'trackObjectNames' list, instead of quitting due to an error.
 - ### May 19, 2024 - v2024.05.19
@@ -424,7 +427,6 @@ File `main.html`:
 <html>
   <head>
     <meta charset="utf-8">
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="scripts/summer.js"></script>
     <script src="scripts/main.js"></script>
   </head>
@@ -460,11 +462,11 @@ class Summer {
 File `scripts/main.js`:
 
 ```js
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', () => {
   let summer = new Summer
   summer.Add(1)
   summer.Add(4)
-  $('#result').text(summer.result)
+  document.getElementById('result').textContent = summer.result
 })
 ```
 
@@ -474,7 +476,6 @@ File `testing/tests.html`:
 <html>
   <head>
     <meta charset="utf-8">
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="../../../jazillionth.js"></script>
     <script src="tests.js"></script>
   </head>
@@ -512,7 +513,7 @@ jazil.AddTestSet(mainPage, 'Summer tests', {
 
 jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should list the correct answer': function(jazil) {
-    let shownResult = parseInt($(jazil.testDocument).find('#result').text())
+    let shownResult = parseInt(jazil.testDocument.getElementById('result').textContent)
 
     jazil.ShouldBe(shownResult, 5)
   }
@@ -600,18 +601,18 @@ File `main.html`: replace `<body></body>` with:
 File `scripts/main.js`: replace its content with:
 
 ```js
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', () => {
   let summer = new Summer
   summer.Add(1)
   summer.Add(2)
   summer.Add(4)
-  $('#sumResult').text(summer.result)
+  document.getElementById('sumResult').textContent = summer.result
 
   let multiplier = new Multiplier
   multiplier.Add(2)
   multiplier.Add(3)
   multiplier.Add(5)
-  $('#multiplyResult').text(multiplier.result)
+  document.getElementById('multiplyResult').textContent = multiplier.result
 })
 ```
 
@@ -677,12 +678,12 @@ File `testing/main.js`: this gets the test set for the main page:
 ```js
 jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should list the correct sum': function(jazil) {
-    let shownResult = parseInt($(jazil.testDocument).find('#sumResult').text())
+    let shownResult = parseInt(jazil.testDocument.getElementById('sumResult').textContent)
 
     jazil.ShouldBe(shownResult, 7)
   },
   'The main page should list the correct multiplication': function(jazil) {
-    let shownResult = parseInt($(jazil.testDocument).find('#multiplyResult').text())
+    let shownResult = parseInt(jazil.testDocument.getElementById('multiplyResult').textContent)
 
     jazil.ShouldBe(shownResult, 30)
   }
@@ -877,7 +878,7 @@ jazil.AddTestSet(mainPage, 'module Summer', {
 
 jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should list the correct answer': function(jazil) {
-    let shownResult = parseInt($(jazil.testDocument).find('#result').text())
+    let shownResult = parseInt(jazil.testDocument.getElementById('result').textContent)
 
     jazil.ShouldBe(shownResult, 5)
   }
@@ -902,7 +903,7 @@ File `main.html`: change `<body></body>` into:
 File `scripts/main.js`: update it to:
 
 ```js
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', () => {
   let value1 = 1
   let value2 = parseInt(localStorage.getItem('value2'))
   if (isNaN(value2))
@@ -915,9 +916,9 @@ $(document).ready(function() {
   summer.Add(value2)
   let result = summer.result
 
-  $('#value2').text(value2)
+  document.getElementById('value2').textContent = value2
   localStorage.setItem('value2', value2)
-  $('#result').text(result)
+  document.getElementById('result').textContent = result
   localStorage.setItem('result', result)
 })
 ```
@@ -929,7 +930,7 @@ jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should calculate the correct answer': function(jazil) {
     let storedValue2 = parseInt(jazil.testWindow.localStorage.getItem('value2'))
     let storedResult = parseInt(jazil.testWindow.localStorage.getItem('result'))
-    let shownResult = parseInt($(jazil.testDocument).find('#result').text())
+    let shownResult = parseInt(jazil.testDocument.getElementById('result').textContent)
 
     jazil.Assert(!isNaN(storedResult), 'stored result is not numeric')
     jazil.Assert(!isNaN(storedValue2), 'stored value2 is not numeric')
@@ -962,21 +963,21 @@ File `scripts/main.js`: update it to:
 
 ```js
 function Calculate() {
-  let value1 = parseInt($('#value1').val())
-  let value2 = parseInt($('#value2').val())
+  let value1 = parseInt(document.getElementById('value1').value)
+  let value2 = parseInt(document.getElementById('value2').value)
 
   let summer = new Summer
   summer.Add(value1)
   summer.Add(value2)
   let result = summer.result
 
-  $('#result').val(result)
+  document.getElementById('result').value = result
   localStorage.setItem('result', result)
 }
 
 
-$(document).ready(function() {
-  $('#calculate').on('click', Calculate)
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('calculate').addEventListener('click', Calculate)
 })
 ```
 
@@ -999,7 +1000,7 @@ function OnBeforePageTests(jazil, testPage) {
 
   // Hijack the 'Calculate' button in the main page to eventually
   // resume testing.
-  $(jazil.testDocument).find('#calculate').on('click', () => {
+  jazil.testDocument.getElementById('calculate').addEventListener('click', () => {
     pauseMainTests = false
     // Continue delayed, so that we're sure the page's own code
     // ran for the calculate button.
@@ -1039,8 +1040,8 @@ let options = {
   'OnAfterSetTests': OnAfterSetTests
 }
 let jazil = new Jazillionth(options)
-$(document).ready(function() {
-  $('#startTests').on('click', function() {
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('startTests').addEventListener('click', () => {
     pauseMainTests = true
     jazil.StartTests()
   })
@@ -1072,12 +1073,12 @@ let summerSet = jazil.AddTestSet(mainPage, 'Summer tests', {
 
 
 function GetMainPageState(jazil) {
-  let value1 = parseInt($(jazil.testDocument).find('#value1').val())
-  let value2 = parseInt($(jazil.testDocument).find('#value2').val())
+  let value1 = parseInt(jazil.testDocument.getElementById('value1').value)
+  let value2 = parseInt(jazil.testDocument.getElementById('value2').value)
   return {
     'value1': value1,
     'value2': value2,
-    'shownResult': parseInt($(jazil.testDocument).find('#result').val()),
+    'shownResult': parseInt(jazil.testDocument.getElementById('result').value),
     'storedResult': parseInt(jazil.testWindow.localStorage.getItem('result')),
     'correctResult': value1 + value2
   }
@@ -1121,7 +1122,6 @@ class Summer {
 File `testing/tests.html`: add our library by using the following script includes:
 
 ```html
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="../../../jazillionth.js"></script>
     <script src="testLibrary.js"></script>
     <script src="tests.js"></script>
@@ -1201,7 +1201,6 @@ We want to test the main page itself in-line.  This way we can test it right fro
 File `main.html`: add extra script tags to include Jazillionth and the test scripts directly.  Replace the script includes with:
 
 ```html
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="scripts/summer.js"></script>
     <script src="scripts/main.js"></script>
     <script src="../../jazillionth.js"></script>
@@ -1290,7 +1289,7 @@ jazil.AddTestSet(mainPage, 'Summer tests', {
 
 jazil.AddTestSet(mainPage, 'Main page tests', {
   'The main page should list the correct answer': function(jazil) {
-    let shownResult = parseInt($(jazil.testDocument).find('#result').text())
+    let shownResult = parseInt(jazil.testDocument.getElementById('result').textContent)
 
     jazil.ShouldBe(shownResult, 5)
   }
@@ -1404,14 +1403,14 @@ File `scripting/summer.js`: add an async version of the `Add` method after the e
 
 File `scripts/main.js`: make it use the async version in a way that takes 6 seconds, so replace the entire content with:
 ```js
-$(document).ready(async function() {
+document.addEventListener('DOMContentLoaded', async () => {
   // Wait 6 seconds in total.
   let summer = new Summer
   await summer.AddAsync(1, 1500)
   await summer.AddAsync(2, 1500)
   await summer.AddAsync(3, 1500)
   await summer.AddAsync(4, 1500)
-  $('#result').text(summer.result)
+  document.getElementById('result').textContent = summer.result
 })
 ```
 
@@ -1462,14 +1461,14 @@ jazil.AddTestSet(mainPage, 'Main page tests', {
     // will be ready after 6 seconds.  The answer is thus not yet
     // known right now, so this should be a fair polling test.
 
-    let resultElement = $(jazil.testDocument).find('#result')
+    let resultElement = jazil.testDocument.getElementById('result')
 
     let waitingForResult
     let resultText
     let result
     let milliSecsWaited = 0
     do {
-      resultText = resultElement.text()
+      resultText = resultElement.textContent
       waitingForResult =
         resultText == '?' &&    // result not known yet
         milliSecsWaited < 10000 // give up after 10 seconds

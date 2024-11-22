@@ -1,4 +1,4 @@
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', () => {
   let value1 = 1
   let value2 = parseInt(localStorage.getItem('value2'))
   if (isNaN(value2))
@@ -11,8 +11,8 @@ $(document).ready(function() {
   summer.Add(value2)
   let result = summer.result
 
-  $('#value2').text(value2)
+  document.getElementById('value2').textContent = value2
   localStorage.setItem('value2', value2)
-  $('#result').text(result)
+  document.getElementById('result').textContent = result
   localStorage.setItem('result', result)
 })

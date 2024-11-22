@@ -6,7 +6,7 @@ function OnBeforePageTests(jazil, testPage) {
 
   // Hijack the 'Calculate' button in the main page to eventually
   // resume testing.
-  $(jazil.testDocument).find('#calculate').on('click', () => {
+  jazil.testDocument.getElementById('calculate').addEventListener('click', () => {
     pauseMainTests = false
     // Continue delayed, so that we're sure the page's own code
     // ran for the calculate button.
@@ -46,8 +46,8 @@ let options = {
   'OnAfterSetTests': OnAfterSetTests
 }
 let jazil = new Jazillionth(options)
-$(document).ready(function() {
-  $('#startTests').on('click', function() {
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('startTests').addEventListener('click', () => {
     pauseMainTests = true
     jazil.StartTests()
   })
@@ -79,12 +79,12 @@ let summerSet = jazil.AddTestSet(mainPage, 'Summer tests', {
 
 
 function GetMainPageState(jazil) {
-  let value1 = parseInt($(jazil.testDocument).find('#value1').val())
-  let value2 = parseInt($(jazil.testDocument).find('#value2').val())
+  let value1 = parseInt(jazil.testDocument.getElementById('value1').value)
+  let value2 = parseInt(jazil.testDocument.getElementById('value2').value)
   return {
     'value1': value1,
     'value2': value2,
-    'shownResult': parseInt($(jazil.testDocument).find('#result').val()),
+    'shownResult': parseInt(jazil.testDocument.getElementById('result').value),
     'storedResult': parseInt(jazil.testWindow.localStorage.getItem('result')),
     'correctResult': value1 + value2
   }
