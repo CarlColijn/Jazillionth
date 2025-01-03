@@ -6,15 +6,34 @@
 
 
 
+## Table of contents
+- [Core idea](#core-idea)
+- [Obligatory disclaimer](#obligatory-disclaimer)
+- [License](#license)
+- [Used terms and names](#used-terms-and-names)
+- [Creating the test suite page](#creating-the-test-suite-page)
+- [Starting up Jazillionth](#starting-up-jazillionth)
+- [Testing JavaScript objects](#testing-javascript-objects)
+- [Registering and defining tests](#registering-and-defining-tests)
+- [Accessing the page under test](#accessing-the-page-under-test)
+- [Running the tests](#running-the-tests)
+- [Intervening in the test flow](#intervening-in-the-test-flow)
+- [Tweaking and advanced functionality](#tweaking-and-advanced-functionality)
+- [Testing without a dedicated web server](#testing-without-a-dedicated-web-server)
+- [Change log](#change-log)
+- [Examples](#examples)
+
+
+
 ## Core idea
 
 Jazillionth is a lightweight, non-intrusive, easy-to-use testing harness for automatically testing your JavaScript;
 
 * **Lightweight**: Jazillionth comes bundled in a single JavaScript file, and has no external dependencies.
-* **Non-intrusive**: you do not need to add anything to the pages and scripts you want to test.  Jazillionth wraps your pages and scripts, and all of your testing code lives in a test suite wrapper around your pages.
+* **Non-intrusive**: you do not need to modify the pages and scripts you want to test.  Jazillionth wraps your pages and scripts, and all of your testing code resides in a test suite wrapper around your pages.
 * **Easy-to-use**: you only need to create a simple test suite page which links to Jazillionth, set up a Jazillionth object on it, and register your pages and tests with this object.  Next, just open the test suite page in your browser, and all tests should run automatically.  Done!
 
-As expected, Jazillionth doesn't promise the world and beyond, but that makes it very light weight in use and probably Good Enough for most scenarios.
+As expected, Jazillionth doesn't promise the world and beyond, but its lightweight design is sufficient for most scenarios.
 
 All use cases are explained in the chapters below, and examples are shown in the chapter <a href="#examples">Examples</a>.
 
@@ -32,13 +51,20 @@ Local files (opening files with the `file://` protocol) are not testable either.
 
 Last (but certainly not least), both the test suite page as well as the pages under test running in the iframe have their own scripts.  But the test suite page's script should not run before the page under test's script has run.  Jazillionth seems to get this right, but I have so far not been able to get absolute guarantees that the way Jazillionth manages this is a sure-fire way to ascertain this behavior.  If Jazillionth's tests run before your page under test's scripts have run, please let me know!
 
-If the above restrictions are a deal breaker in your situation, you can still use Jazillionth in in-line testing mode.  In that case you only need to add three link tags to your page's head section to link in Jazillionth and your JavaScript test script.  This way an iframe is not necessary anymore which relaxes all security restraints mentioned above.  You should then be able to run your tests anywhere and anyhow you like, while still only minimally altering the page to test.
+If the above restrictions are a deal breaker in your situation, you can still use Jazillionth in inline testing mode.  In that case you only need to add three link tags to your page's head section to link in Jazillionth and your JavaScript test script.  This way an iframe is not necessary anymore which relaxes all security restraints mentioned above.  You should then be able to run your tests anywhere and anyhow you like, while still only minimally altering the page to test.
 
 
 
-## Terms and names used in this document
+## License
+Jazillionth is licensed under the MIT license.  See the [LICENSE](LICENSE) file for details.
 
-This document refers to two pages: the test suite page and the page under test.  The former is the page you use to drive all tests, while the latter is the page being tested.
+![License](https://img.shields.io/github/license/CarlColijn/Jazillionth)
+
+
+
+## Used terms and names
+
+This document refers to two types of pages: the test suite page, which you use to run tests, and the page under test, which is the subject of the tests.
 
 In this document all Jazillionth object instances are named `jazil` for consistency, but you're free to name it whatever you want.  This name reappears as the name of the central Jazillionth object as well as the name of the argument passed into all callback functions.
 
@@ -49,10 +75,10 @@ In this document all Jazillionth object instances are named `jazil` for consiste
 You can run Jazillionth in three ways;
 
 1. from a page wrapping your (external) pages under tests,
-2. in-line from within the page under test, and
+2. inline from within the page under test, and
 3. a mix of the above.
 
-Option 1. allows you to keep your testing code totally separate from the page under test.  This way the page under test can remain free of testing code, so that you can be confident that what you test can be put into production as-is.  In some circumstances this is unfortunately not possible, but then you can always use option 2.
+Option 1 allows you to keep your testing code totally separate from the page under test.  This way the page under test can remain free of testing code, so that you can be confident that what you test can be put into production as-is.  In some circumstances this is unfortunately not possible, but then you can always use option 2.
 
 Jazillionth doesn't require much to get going.  The bare minimum that is needed on either the test suite page or the page under test is the following, in the given order:
 
@@ -61,7 +87,7 @@ Jazillionth doesn't require much to get going.  The bare minimum that is needed 
 3. create (and optionally configure) a Jazillionth object, and
 4. tell your Jazillionth object what tests to perform on which pages.
 
-By default, Jazillionth doesn't need anything else.  In the simplest use case it will:
+By default, Jazillionth requires nothing else.  In the simplest use case it will:
 
 * wait for the test suite page to be ready,
 * prepare the test suite page:
@@ -84,7 +110,7 @@ Before you can register your tests, you have to start up Jazillionth.  You do th
 
 When creating the Jazillionth object, you can also pass in an 'options' argument to further tweak Jazillionth.  See the chapter <a href="#tweaking">Tweaking and advanced functionality</a> for more details on this.
 
-So basically, you must only add:
+To start, simply add:
 
 `let jazil = new Jazillionth()`
 
@@ -94,34 +120,34 @@ and Jazillionth is up-and-running, waiting for pages and tests to be registered.
 
 ## Testing JavaScript objects
 
-When you test your JavaScript variables, classes, functions, etc., you want to access them in the simplest way possible.  Your scripts can already access everything they need as-is if you test the current page in-line.  But Jazillionth loads external pages in an iframe, and then all those JavaScript objects are tucked away there too.  Jazillionth helps with this by letting you specify a list of the names of objects you want to access, and then makes them accessible for you like they were living inside your own script.
+When you test your JavaScript variables, classes, functions, etc., you want to access them in the simplest way possible.  Your scripts can already access everything they need as-is if you test the current page inline.  But Jazillionth loads external pages in an iframe, and then all those JavaScript objects are tucked away there too.  Jazillionth helps with this by letting you specify a list of the names of objects you want to access, and then makes them accessible for you like they were living inside your own script.
 
 To get a bit technical: when making these objects accessible to your script, Jazillionth takes a reference to these global objects and puts that reference in your script's global scope.  For classes and functions e.g., this can be done as-is.  For objects that do not get re-assigned anymore once created, this also works.  But dynamic variables that store literal values (like numbers and strings) cannot be referenced like this.  Jazillionth can only copy their value instead, which means you get a snapshot of the value they had when Jazillionth started up, and live updates are not visible to your script.
 
-To solve this, Jazillionth employs a workaround for these types of objects: you can also pass a separate list of the names of objects to track.  When doing so, these objects will be made accessible to your scripts via a like-named accessor function instead of a like-named variable.  Do note though that you then need to treat that variable as a function to get at its value; so instead of using `let copy = myValue` in your test script, you'd have to use `let copy = myValue()`.  A small price to pay.
+To solve this, Jazillionth employs a workaround for these types of objects: you can also provide a list of the names of objects to track.  When doing so, these objects will be made accessible to your scripts via a like-named accessor function instead of a like-named variable.  Do note though that you then need to treat that variable as a function to get at its value; so instead of using `let copy = myValue` in your test script, you'd have to use `let copy = myValue()`.  A small price to pay.
 
 
 
 ## Registering and defining tests
 
-Jazillionth allows you to test multiple pages in one go, each with its own sets of tests.  First you add a page to test, then you add test set(s) to that page to test; these test sets hold the individual test functions themselves.  The object hierarchy thus becomes:
+Jazillionth allows you to test multiple pages simultaneously, each with its own sets of tests.  First you add a page to test, then you add test set(s) to that page to test; these test sets hold the individual test functions themselves.  The object hierarchy thus becomes:
 
 * 0 or more test pages (TestPage objects)
   * 0 or more test sets (TestSet objects)
     * 0 or more test functions (dictionary of test functions)
 
-To add a page to test, call either `AddPageToTest(name, url, accessObjectNames, trackObjectNames)` for external pages, or `AddPageToTest(name)` for the current page;
+To add a page to test, call `AddPageToTest(name, url, accessObjectNames, trackObjectNames)` for external pages, or `AddPageToTest(name)` for the current page;
 
 * `name`: string<br>
   A reference name for use in the test log.
 * `url`: string (optional)<br>
-  The page's URL for external pages, or do not specify an URL to test the current page in-line.
+  The page's URL for external pages, or do not specify an URL to test the current page inline.
 * `accessObjectNames`: array of string (optional)<br>
   A list of the names of the JavaScript objects to make available to your test scripts by reference.
 * `trackObjectNames`: array of string (optional)<br>
   Identical in use to `accessObjectNames`, but for tracked objects.  Jazillionth will make accessor functions for these objects for you.
 
-`AddPageToTest` returns the created TestPage object to you.  You must use this to later register test sets for it.  Note that Jazillionth ignores the `accessObjectNames` and `trackObjectNames` when testing the current page in-line, since your scripts can access these objects as-is anyway, and accessor functions for `trackObjectNames` would even give name conflicts with the objects they track.
+`AddPageToTest` returns the created TestPage object to you.  You must use this to later register test sets for it.  Note that Jazillionth ignores the `accessObjectNames` and `trackObjectNames` when testing the current page inline, since your scripts can access these objects as-is anyway, and accessor functions for `trackObjectNames` would even give name conflicts with the objects they track.
 
 You can also access its properties wherever you encounter it in your callback functions and test functions.  These are:
 
@@ -216,7 +242,7 @@ The following assertion functions can be used:
 * `jazil.Assert(condition, message)`<br>
   Asserts the given condition holds, failing with the given message if not.
 * `jazil.ShouldBe(value, expected, message)`<br>
-  Checks if the given value equals the expected value, failing with the given message if not.  Equality is checked using the safer strict `===` operator.  The message is augmented to show what value was given and what was expected.  Note that NaN is also explicitly considered equal to NaN (a departure from the Javascript default).
+  Checks if the given value equals the expected value, failing with the given message if not.  Equality is checked using the safer strict `===` operator.  The message is augmented to show the actual and expected values.  Note that NaN is also explicitly considered equal to NaN (a departure from the Javascript default).
 * `jazil.ShouldNotBe(value, expected, message)`<br>
   The opposite of `jazil.ShouldBe`.
 * `jazil.ShouldBeLoose(value, expected, message)`<br>
@@ -224,7 +250,7 @@ The following assertion functions can be used:
 * `jazil.ShouldNotBeLoose(value, expected, message)`<br>
   The opposite of `jazil.ShouldBeLoose`.
 * `jazil.ShouldBeBetween(value, expectedLower, expectedHigher, message)`<br>
-  Checks if the given value falls within the expected value range, failing with the given message if not.  Bounds checking is done using the `>=` and `<=` operators.  The message is augmented to show what value was given and what was expected.
+  Checks if the given value falls within the expected value range, failing with the given message if not.  Bounds checking is done using the `>=` and `<=` operators.  The message is augmented to show the actual and expected values.
 * `jazil.ShouldNotBeBetween(value, expectedLower, expectedHigher, message)`<br>
   The opposite of `jazil.ShouldBeBetween`.
 * `jazil.ShouldThrow(CodeToRun, message)`<br>
@@ -250,10 +276,10 @@ Since external pages under test are loaded in a separate iframe, your testing sc
 
 When adding an external page to test you can tell Jazillionth to automatically make certain JavaScript objects available for direct use in your scripts.  Do this by specifying the `accessObjectNames` argument to `AddPageToTest`.  You should pass an array holding the names of all the JavaScript objects you want to access on that page.  Once that page has loaded, Jazillionth will try to access each one of these objects and make an alias to them under the test suite page's window, so that they will also be globally available.  After that these objects are accessible just as if they were declared in your own script.<br>
 The only restriction here is that global variables which are set to literal values (numbers, string etc.) get copied.  This means you cannot modify the originals in the page under test, nor do the values your script sees change while your tests run.  A similar thing applies when a global variable holds an object but is assigned a different object while the tests run.  For these objects you can prepend their name with an '!' in the `accessObjectNames` list, like `!myVariable`.  Jazillionth will then add an accessor function under that variable's name, instead of a copy of the value.  When you want to access the value you then only need to treat the variable as a function, like `myVariable()`.<br>
-When you test the current page in-line, no JavaScript objects are made available, since your script should be able to access them by itself anyway.  You can still pass a list of names in the `accessObjectNames` argument when you pass `undefined` as the URL argument, but these names will just be ignored.  This way you can more easily switch between external and in-line testing.
+When you test the current page inline, no JavaScript objects are made available, since your script should be able to access them by itself anyway.  You can still pass a list of names in the `accessObjectNames` argument when you pass `undefined` as the URL argument, but these names will just be ignored.  This way you can more easily switch between external and inline testing.
 
 Jazillionth also makes two other objects accessible: the current page under test's `window` and `document` objects.  You can find these under `jazil.testWindow` and `jazil.testDocument` respectively.  You can use these to access, for example, the page under test's body content, the rest of the page under test's global JavaScript `var` variables and functions, as well as the page's `location`, `history` and `localstorage` objects.<br>
-When testing the current page in-line these properties are set to the page's own `window` and `window.document` objects, so that your test scripts can be kept agnostic of what type of page is being tested.
+When testing the current page inline these properties are set to the page's own `window` and `window.document` objects, so that your test scripts can be kept agnostic of what type of page is being tested.
 
 
 
@@ -268,7 +294,7 @@ And just press Refresh whenever you want to run the tests again!
 <a name="advancedTestFlow"></a>
 ## Intervening in the test flow
 
-Simple pages with simple content can be tested statically without problem.  The same goes for individual test sets which only perform tests on statically scoped test conditions.  For these tests it is OK to just run all tests on all pages back-to-back without interruption; this is what Jazillionth does by default.
+Simple pages with simple content can be tested statically without problem.  The same goes for individual test sets which only perform tests on statically scoped test conditions.  For these tests, it is OK to just run all tests on all pages back-to-back without interruption; this is what Jazillionth does by default.
 
 However, when your test sets depend on user interaction, you can alter the test flow by using custom event handlers and/or starting/pausing/continuing the tests on your own terms.  These can all be controlled via initialization options.  The following mechanisms are in place for this:
 
@@ -386,7 +412,7 @@ If you have Python 3 installed, then you can also use `testExamples.py` from the
 - ### September 22, 2023 - v2023.09.22-beta
   #### Major updates to make Jazillionth more versatile in use
 
-  Jazillionth can now also test pages in-line, and removed the restriction of what type of objects can be accessed from the test script.
+  Jazillionth can now also test pages inline, and removed the restriction of what type of objects can be accessed from the test script.
 - ### March 11, 2023 - v2023.02.11-beta
   #### Added exception testing and improved testing server script
 
@@ -1199,9 +1225,9 @@ jazil.AddTestSet(mainPage, 'Library files not in call stack', {
 
 
 
-### Example #7 - testing the main page in-line
+### Example #7 - testing the main page inline
 
-We want to test the main page itself in-line.  This way we can test it right from disk as well without starting a server.  For that we make the following alterations to the base example:
+We want to test the main page itself inline.  This way we can test it right from disk as well without starting a server.  For that we make the following alterations to the base example:
 
 File `main.html`: add extra script tags to include Jazillionth and the test scripts directly.  Replace the script includes with:
 
