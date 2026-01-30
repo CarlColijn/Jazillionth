@@ -54,17 +54,21 @@ class Jazillionth {
 
     this.#ClearPreviousResults()
 
-    this.ContinueTests()
+    await this.ContinueTests()
   }
 
 
   async ContinueTests(delayed = false) {
-    if (delayed)
-      setTimeout(() => {
-        this.#RunTestLoop()
-      }, 0)
+    if (delayed) {
+      await new Promise((resolve) => {
+        setTimeout(async () => {
+          await this.#RunTestLoop()
+          resolve()
+        }, 0)
+      })
+    }
     else
-      this.#RunTestLoop()
+      await this.#RunTestLoop()
   }
 
 
