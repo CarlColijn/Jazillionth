@@ -58,7 +58,7 @@ class Jazillionth {
   }
 
 
-  async ContinueTests(delayed) {
+  async ContinueTests(delayed = false) {
     if (delayed)
       setTimeout(() => {
         this.#RunTestLoop()
@@ -281,10 +281,8 @@ class Jazillionth {
 
 
   #UnmapObjects() {
-    for (let objectNameNr in this.#mappedObjectNames) {
-      let objectName = this.#mappedObjectNames[objectNameNr]
+    for (let objectName of this.#mappedObjectNames)
       delete window[objectName]
-    }
 
     this.#mappedObjectNames = []
   }
@@ -296,9 +294,7 @@ class Jazillionth {
   }
   #MapObjectsOfType(objectNames, objectType, objectDescription) {
     if (objectNames !== undefined) {
-      for (let objectNameNr in objectNames) {
-        let objectName = objectNames[objectNameNr]
-
+      for (let objectName of objectNames) {
         try {
           this.#mappedObjectNames.push(objectName)
           if (objectType === this.#ObjectType.tracked)
@@ -459,7 +455,7 @@ class Jazillionth {
   async #RunSetTests(testPage, testSet) {
     let setPassed = true
 
-    for (let testName in testSet.tests) {
+    for (let testName of Object.keys(testSet.tests)) {
       try {
         // Wrap the function to test in an async lambda so
         // that we can await on it even if it's synchronous;
@@ -535,7 +531,7 @@ class Jazillionth {
 
   #OnDone() {
     this.#testsRunning = false
-    if (this.#options.showResultWhenDone)
+    if (this.#options.showResultWhenDone && this.#resultElement !== undefined)
       this.#resultElement.scrollIntoView()
     return false
   }
@@ -555,12 +551,18 @@ class Jazillionth {
       // more than likely we miss the iframe's load event, which
       // is the correct time to start the tests.
 
-      if (this.#options.iframeElementSpec !== undefined)
+      if (this.#options.iframeElementSpec !== undefined) {
         this.#iframeElement = document.querySelector(this.#options.iframeElementSpec)
+        if (this.#iframeElement === null)
+          throw new Error(`Jazillionth: iframe element "${this.#options.iframeElementSpec}" not found.`)
+      }
       else {
+        let bodyElement = document.querySelector('body')
+        if (bodyElement === null)
+          throw new Error('Jazillionth: body element not found.')
         this.#iframeElement = document.createElement('iframe')
         this.#iframeElement.setAttribute('id', 'jazilTestFrame')
-        document.querySelector('body').appendChild(this.#iframeElement)
+        bodyElement.appendChild(this.#iframeElement)
       }
 
       // We're using a combination of onload and setTimeout;
@@ -590,6 +592,8 @@ class Jazillionth {
 
   #SetupStyles() {
     let headElement = document.querySelector('head')
+    if (headElement === null)
+      throw new Error('Jazillionth: head element not found.')
 
     let mainStylesElement = document.createElement('style')
     mainStylesElement.setAttribute('type', 'text/css')
@@ -626,9 +630,6 @@ class Jazillionth {
       #jazilResultTable tr {
         border: 1px solid ${this.#options.textColor};
         width: 100%;
-      }
-
-      #jazilResultTable tr {
         color: ${this.#options.textColor};
       }
 
@@ -675,6 +676,8 @@ class Jazillionth {
 
   #AddResultListing() {
     let parentElement = document.querySelector(this.#options.resultElementSpec)
+    if (parentElement === null)
+      throw new Error(`Jazillionth: result element "${this.#options.resultElementSpec}" not found.`)
 
     this.#resultElement = document.createElement('div')
     this.#resultElement.setAttribute('id', 'jazilResult')
@@ -688,7 +691,7 @@ class Jazillionth {
     this.#resultStateElement.setAttribute('id', 'jazilResultState')
     resultHeaderElement.appendChild(this.#resultStateElement)
 
-    let setDisplayModeElementText = (showAll) => {
+    let setDisplayModeElementText = () => {
       this.#toggleDisplayModeElement.textContent =
         this.#showingPassedTests ?
         'Hide passed tests' :
@@ -804,9 +807,8 @@ class Jazillionth {
       let allLines = error.stack.split('\n')
 
       let relevantLines = allLines.filter((line) => {
-        // We're using indexOf instead of includes to keep IE11 on board.
-        for (let textNr in this.#options.ignoreCallStackLinesWith)
-          if (line.indexOf(this.#options.ignoreCallStackLinesWith[textNr]) !== -1)
+        for (let ignoreText of this.#options.ignoreCallStackLinesWith)
+          if (line.includes(ignoreText))
             return false
         return true
       })

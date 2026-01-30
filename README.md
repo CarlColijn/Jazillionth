@@ -311,7 +311,7 @@ However, when your test sets depend on user interaction, you can alter the test 
 * option `OnAfterPageTests`<br>
   A user-defined function to run after each test set on a page under test is tested.  Its signature should be `OnAfterSetTests(jazil, testPage, testSet, testedOK)`.  `jazil` is the fully set-up Jazillionth object doing the tests, `testPage` is the TestPage object returned by the original call to `AddPageToTest`, `testSet` is the TestSet object returned by the original call to `AddTestSet`, and `testedOK` is a boolean indicating if all tests ran OK for this test set.
 
-If you let Jazillionth pause its testing, then you can continue the tests at a later time by calling `ContinueTests` on the Jazillionth object.  For a more finely controlled code execution flow you can pass an optional boolean argument to indicate you want a delayed continuation.  With delayed continuation the tests will only resume running after your current script is done.  (This is arranged via a setTimeout with a delay of zero.)
+If you let Jazillionth pause its testing, then you can continue the tests at a later time by calling `ContinueTests` on the Jazillionth object.  For a more finely controlled code execution flow you can pass an optional boolean argument to indicate you want a delayed continuation (defaults to `false`).  With delayed continuation the tests will only resume running after your current script is done.  (This is arranged via a setTimeout with a delay of zero.)
 
 Do note that `StartTests` and `ContinueTests` are asynchronous functions, and they will return before the tests have finished.  So if you want your script to wait for the tests to be done before the rest of your script runs, you have to `await` on them.
 
